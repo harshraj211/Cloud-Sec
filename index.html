@@ -4,777 +4,174 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>☁️ CloudSec — 100-Day Tracker</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
-<style>
-/* ═══ THEME SYSTEM ═══ */
-:root {
-  /* Accent palette */
-  --a-blue: #60a5fa;
-  --a-green: #34d399;
-  --a-purple: #a78bfa;
-  --a-amber: #fbbf24;
-
-  /* Dynamic accent (changes with picker) */
-  --accent: var(--a-blue);
-  --accent-dim: rgba(96,165,250,.12);
-  --accent-border: rgba(96,165,250,.25);
-  --accent-glow: 0 0 24px rgba(96,165,250,.18);
-
-  /* Fixed semantic */
-  --green: #34d399;
-  --red: #f87171;
-  --amber: #fbbf24;
-  --purple: #a78bfa;
-
-  --font-head: 'Cabinet Grotesk', sans-serif;
-  --font-mono: 'DM Mono', monospace;
-  --radius: 12px;
-  --radius-sm: 7px;
-  --radius-lg: 18px;
-  --nav-h: 58px;
-  --transition: all .2s cubic-bezier(.4,0,.2,1);
-}
-
-/* ── ACCENT VARIANTS ── */
-[data-accent="blue"]   { --accent:#60a5fa; --accent-dim:rgba(96,165,250,.1);  --accent-border:rgba(96,165,250,.22); --accent-glow:0 0 24px rgba(96,165,250,.15); }
-[data-accent="green"]  { --accent:#34d399; --accent-dim:rgba(52,211,153,.1);  --accent-border:rgba(52,211,153,.22); --accent-glow:0 0 24px rgba(52,211,153,.15); }
-[data-accent="purple"] { --accent:#a78bfa; --accent-dim:rgba(167,139,250,.1); --accent-border:rgba(167,139,250,.22);--accent-glow:0 0 24px rgba(167,139,250,.15); }
-[data-accent="amber"]  { --accent:#fbbf24; --accent-dim:rgba(251,191,36,.1);  --accent-border:rgba(251,191,36,.22); --accent-glow:0 0 24px rgba(251,191,36,.15); }
-
-/* ── DARK THEME (TRUE BLACK) ── */
-[data-theme="dark"] {
-  --bg:      #0a0a0a;
-  --bg2:     #111111;
-  --bg3:     #171717;
-  --bg4:     #1c1c1c;
-  --bg-glass: rgba(17,17,17,.75);
-  --border:  #222222;
-  --border2: #2a2a2a;
-  --border3: #333333;
-  --text:    #f5f5f5;
-  --text2:   #a3a3a3;
-  --muted:   #525252;
-  --shadow:  0 4px 24px rgba(0,0,0,.7);
-  --shadow-lg: 0 12px 48px rgba(0,0,0,.8);
-}
-
-/* ── LIGHT THEME ── */
-[data-theme="light"] {
-  --bg:      #fafafa;
-  --bg2:     #ffffff;
-  --bg3:     #f4f4f5;
-  --bg4:     #e4e4e7;
-  --bg-glass: rgba(255,255,255,.82);
-  --border:  #e4e4e7;
-  --border2: #d4d4d8;
-  --border3: #a1a1aa;
-  --text:    #09090b;
-  --text2:   #52525b;
-  --muted:   #a1a1aa;
-  --shadow:  0 2px 12px rgba(0,0,0,.08);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,.12);
-}
-
-/* ── DENSITY ── */
-[data-density="compact"] {
-  --card-pad: 14px;
-  --card-gap: 8px;
-  --stat-size: 28px;
-}
-[data-density="comfortable"] {
-  --card-pad: 20px;
-  --card-gap: 12px;
-  --stat-size: 36px;
-}
-
-/* ═══ RESET ═══ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; scroll-padding-top: 78px; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-mono);
-  min-height: 100vh;
-  overflow-x: hidden;
-  transition: background .35s ease, color .35s ease;
-}
-::-webkit-scrollbar { width: 3px; height: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border3); border-radius: 99px; }
-a { color: inherit; text-decoration: none; }
-
-/* Subtle grid background */
-[data-theme="dark"] body::before {
-  content: '';
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-[data-theme="light"] body::before {
-  content: '';
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-/* ══ NAV ══ */
-nav {
-  position: sticky; top: 0; z-index: 200;
-  height: var(--nav-h);
-  background: var(--bg-glass);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  transition: background .35s ease, border-color .35s ease;
-}
-.nav-logo {
-  font-family: var(--font-head);
-  font-size: 16px; font-weight: 900;
-  color: var(--text); letter-spacing: -.5px;
-  display: flex; align-items: center; gap: 8px; white-space: nowrap;
-}
-.nav-logo-pulse {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
-  animation: pulse 2.4s infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.85)} }
-
-.nav-links { display: flex; gap: 1px; }
-.nav-link {
-  font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
-  color: var(--muted); background: none; border: none; cursor: pointer;
-  padding: 6px 11px; border-radius: 6px;
-  transition: var(--transition); font-family: var(--font-mono); white-space: nowrap;
-}
-.nav-link:hover { color: var(--text); background: var(--bg3); }
-.nav-link.active { color: var(--accent); background: var(--accent-dim); font-weight: 500; }
-
-.nav-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-
-/* ── CONTROL BAR ── */
-.ctrl-bar {
-  display: flex; align-items: center; gap: 4px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 8px; padding: 3px;
-}
-
-/* Theme toggle */
-.theme-toggle {
-  display: flex; align-items: center; gap: 1px;
-  background: var(--bg3); border-radius: 6px; padding: 2px;
-}
-.theme-btn {
-  width: 30px; height: 26px; border-radius: 5px;
-  border: none; cursor: pointer; font-size: 13px;
-  background: transparent; color: var(--muted);
-  transition: var(--transition); display: flex; align-items: center; justify-content: center;
-}
-.theme-btn.active { background: var(--bg2); color: var(--text); box-shadow: var(--shadow); }
-[data-theme="dark"] .theme-btn.active { color: var(--accent); }
-[data-theme="light"] .theme-btn.active { color: var(--amber); }
-
-/* Divider */
-.ctrl-divider { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
-
-/* Accent picker */
-.accent-picker { display: flex; gap: 4px; padding: 0 4px; }
-.accent-dot {
-  width: 14px; height: 14px; border-radius: 50%; cursor: pointer;
-  border: 2px solid transparent;
-  transition: var(--transition); position: relative;
-}
-.accent-dot:hover { transform: scale(1.2); }
-.accent-dot.active { border-color: var(--text); box-shadow: 0 0 8px currentColor; }
-.accent-dot[data-a="blue"]   { background: #60a5fa; }
-.accent-dot[data-a="green"]  { background: #34d399; }
-.accent-dot[data-a="purple"] { background: #a78bfa; }
-.accent-dot[data-a="amber"]  { background: #fbbf24; }
-
-/* Density toggle */
-.density-btn {
-  width: 28px; height: 26px; border-radius: 5px; border: none; cursor: pointer;
-  font-size: 11px; background: transparent; color: var(--muted);
-  transition: var(--transition); display: flex; align-items: center; justify-content: center;
-}
-.density-btn.active { color: var(--accent); }
-
-.btn {
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: .6px;
-  padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer;
-  transition: var(--transition); border: 1px solid; white-space: nowrap;
-}
-.btn-ghost { background: var(--bg3); color: var(--text2); border-color: var(--border); }
-.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-.btn-accent { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
-.btn-accent:hover { background: var(--accent-dim); box-shadow: var(--accent-glow); }
-
-/* Hamburger */
-.hamburger {
-  display: none; flex-direction: column; gap: 5px; cursor: pointer;
-  padding: 8px; border: none; background: none;
-}
-.hamburger span {
-  display: block; width: 20px; height: 1.5px;
-  background: var(--text2); border-radius: 99px; transition: var(--transition);
-}
-.hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(4.5px,4.5px); }
-.hamburger.open span:nth-child(2) { opacity: 0; }
-.hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(4.5px,-4.5px); }
-
-/* ══ MOBILE DRAWER ══ */
-.mobile-drawer {
-  display: none;
-  position: fixed; top: var(--nav-h); left: 0; right: 0;
-  background: var(--bg-glass); backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--border); z-index: 190;
-  padding: 10px 14px 14px; flex-direction: column; gap: 2px;
-  transition: background .35s ease;
-}
-.mobile-drawer.open { display: flex; }
-.mobile-drawer .nav-link { padding: 10px 14px; font-size: 11px; border-radius: 7px; border: 1px solid transparent; }
-.mobile-drawer .nav-link.active { border-color: var(--accent-border); }
-.mob-action-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
-.mob-action-row .btn { flex: 1; text-align: center; }
-
-/* ══ BOTTOM TABS ══ */
-.bottom-tabs {
-  display: none;
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-  background: var(--bg-glass); backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border);
-  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
-  grid-template-columns: repeat(5,1fr);
-  transition: background .35s ease;
-}
-.tab-item {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  cursor: pointer; padding: 4px 2px; border: none; background: none; transition: var(--transition);
-}
-.tab-icon { font-size: 17px; line-height: 1; }
-.tab-lbl { font-size: 9px; color: var(--muted); letter-spacing: .5px; font-family: var(--font-mono); transition: var(--transition); }
-.tab-item.active .tab-lbl { color: var(--accent); }
-.tab-item.active .tab-icon { filter: drop-shadow(0 0 6px var(--accent)); }
-
-/* ══ LAYOUT ══ */
-.container { max-width: 1100px; margin: 0 auto; padding: 0 22px; position: relative; z-index: 1; }
-
-/* ══ HERO ══ */
-.hero { padding: 48px 0 32px; }
-.hero-eyebrow {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 10px; letter-spacing: 2.5px; color: var(--muted);
-  text-transform: uppercase; margin-bottom: 18px;
-  border: 1px solid var(--border); padding: 5px 14px; border-radius: 99px;
-  background: var(--bg2);
-}
-.hero-eyebrow span { color: var(--accent); }
-.hero-title {
-  font-family: var(--font-head);
-  font-size: clamp(32px, 5.5vw, 60px);
-  font-weight: 900; line-height: .96; margin-bottom: 16px; letter-spacing: -1.5px;
-}
-.hero-title .t1 { color: var(--text); display: block; }
-.hero-title .t2 {
-  display: block; color: transparent;
-  background: linear-gradient(135deg, var(--accent), var(--green));
-  -webkit-background-clip: text; background-clip: text;
-}
-.hero-sub { color: var(--text2); font-size: 12px; max-width: 520px; line-height: 1.8; margin-bottom: 22px; }
-.hero-meta { display: flex; gap: 10px; flex-wrap: wrap; }
-.hero-badge {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; color: var(--text2);
-  border: 1px solid var(--border); padding: 5px 12px;
-  border-radius: 99px; background: var(--bg2);
-  transition: var(--transition);
-}
-.hero-badge strong { color: var(--text); }
-.hero-badge:hover { border-color: var(--accent-border); }
-
-/* START DATE */
-.start-date-wrap {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 14px 18px;
-  margin-bottom: 28px; flex-wrap: wrap;
-  transition: border-color .2s;
-}
-.start-date-wrap:focus-within { border-color: var(--accent-border); }
-.start-date-wrap label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
-.start-date-wrap input[type=date] {
-  background: var(--bg3); border: 1px solid var(--border2);
-  color: var(--text); font-family: var(--font-mono); font-size: 12px;
-  padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer;
-  color-scheme: dark; transition: var(--transition);
-}
-[data-theme="light"] .start-date-wrap input[type=date] { color-scheme: light; }
-.start-date-wrap input[type=date]:focus { outline: none; border-color: var(--accent); }
-.deadline-display { font-size: 11px; color: var(--muted); margin-left: auto; }
-.deadline-display strong { color: var(--amber); }
-
-/* ══ STATS ══ */
-.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--card-gap); margin-bottom: 20px; }
-.stat-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: var(--card-pad);
-  position: relative; overflow: hidden;
-  transition: var(--transition);
-  cursor: default;
-}
-.stat-card::after {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  border-radius: var(--radius) var(--radius) 0 0; opacity: 0; transition: opacity .3s;
-}
-.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--border2); }
-.stat-card:hover::after { opacity: 1; }
-.stat-card.green::after { background: var(--green); }
-.stat-card.red::after   { background: var(--red); }
-.stat-card.amber::after { background: var(--amber); }
-.stat-card.blue::after  { background: var(--accent); }
-
-.stat-icon { font-size: 16px; margin-bottom: 12px; display: block; }
-.stat-val {
-  font-family: var(--font-head);
-  font-size: var(--stat-size); font-weight: 900;
-  line-height: 1; margin-bottom: 4px;
-  transition: all .5s cubic-bezier(.34,1.2,.64,1);
-}
-.stat-lbl { font-size: 9px; letter-spacing: 1.8px; color: var(--muted); text-transform: uppercase; }
-.stat-bar { height: 2px; border-radius: 99px; background: var(--bg4); margin-top: 14px; overflow: hidden; }
-.stat-bar-fill { height: 100%; border-radius: 99px; transition: width .9s cubic-bezier(.34,1.2,.64,1); }
-
-/* ══ JOURNEY BAR ══ */
-.journey-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 20px 24px; margin-bottom: 32px;
-  transition: var(--transition);
-}
-.journey-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
-}
-.journey-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-.journey-count { font-size: 12px; color: var(--accent); font-weight: 500; }
-.journey-track {
-  background: var(--bg4); border-radius: 99px;
-  height: 12px; overflow: hidden; position: relative; margin-bottom: 12px;
-}
-.journey-done {
-  position: absolute; height: 100%;
-  background: linear-gradient(90deg, var(--green), var(--accent));
-  border-radius: 99px; transition: width .9s cubic-bezier(.34,1.2,.64,1);
-  left: 0; top: 0;
-}
-.journey-missed {
-  position: absolute; height: 100%;
-  background: rgba(248,113,113,.4); border-radius: 99px;
-  transition: width .9s ease, left .9s ease; top: 0;
-}
-.phase-legend { display: flex; gap: 18px; flex-wrap: wrap; }
-.phase-dot { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--muted); }
-.phase-dot-pip { width: 8px; height: 8px; border-radius: 2px; }
-
-/* ══ SECTION ══ */
-.section { margin-bottom: 40px; }
-.section-hdr {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 18px; cursor: pointer; user-select: none; padding: 4px 0;
-}
-.section-hdr:hover .section-title { color: var(--accent); }
-.section-num {
-  font-size: 9px; letter-spacing: 2px; color: var(--muted);
-  border: 1px solid var(--border); padding: 3px 9px;
-  border-radius: 99px; background: var(--bg2); white-space: nowrap;
-}
-.section-title {
-  font-family: var(--font-head); font-size: 17px; font-weight: 800;
-  letter-spacing: -.3px; transition: color .2s;
-}
-.section-line { flex: 1; height: 1px; background: var(--border); }
-.section-toggle { font-size: 12px; color: var(--muted); transition: transform .3s; display: none; margin-left: 4px; }
-.section-body.collapsed { max-height: 0!important; overflow: hidden; margin: 0; padding: 0; }
-
-/* ══ CHARTS ══ */
-.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.chart-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 20px;
-  transition: var(--transition);
-}
-.chart-card:hover { border-color: var(--border2); box-shadow: var(--shadow); }
-.chart-card.full { grid-column: 1/-1; }
-.chart-title { font-family: var(--font-head); font-size: 13px; font-weight: 800; margin-bottom: 2px; letter-spacing: -.2px; }
-.chart-sub { font-size: 10px; color: var(--muted); margin-bottom: 16px; }
-canvas { display: block; }
-
-/* ══ PHASES ══ */
-.phases-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.phase-card {
-  border-radius: var(--radius); padding: 20px;
-  border: 1px solid; transition: var(--transition);
-}
-.phase-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-.phase-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-.phase-name { font-family: var(--font-head); font-size: 19px; font-weight: 900; letter-spacing: -.5px; }
-.phase-label-text { font-size: 11px; color: var(--text2); margin-top: 3px; }
-.phase-range { font-size: 9px; letter-spacing: 1px; color: var(--muted); margin-top: 4px; text-transform: uppercase; }
-.phase-pct-big { font-family: var(--font-head); font-size: 40px; font-weight: 900; line-height: 1; letter-spacing: -1px; }
-.phase-track { background: rgba(0,0,0,.35); border-radius: 99px; height: 5px; overflow: hidden; margin-bottom: 16px; }
-[data-theme="light"] .phase-track { background: rgba(0,0,0,.1); }
-.phase-fill { height: 100%; border-radius: 99px; transition: width .9s cubic-bezier(.34,1.2,.64,1); }
-.phase-stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-.phase-stat { background: rgba(0,0,0,.2); border-radius: 8px; padding: 10px; text-align: center; }
-[data-theme="light"] .phase-stat { background: rgba(0,0,0,.04); }
-.phase-stat-val { font-family: var(--font-head); font-size: 20px; font-weight: 800; }
-.phase-stat-lbl { font-size: 9px; color: var(--muted); margin-top: 2px; letter-spacing: 1px; text-transform: uppercase; }
-
-/* ══ TRACKER ══ */
-.tracker-toolbar {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 14px; gap: 12px; flex-wrap: wrap;
-}
-.filter-group { display: flex; gap: 5px; flex-wrap: wrap; }
-.filter-btn {
-  font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px;
-  border: 1px solid var(--border); background: var(--bg2);
-  color: var(--muted); padding: 5px 12px; border-radius: var(--radius-sm);
-  cursor: pointer; transition: var(--transition); text-transform: uppercase;
-}
-.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
-.filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-.page-group { display: flex; gap: 5px; }
-.page-btn {
-  width: 30px; height: 30px; border-radius: var(--radius-sm);
-  border: 1px solid var(--border); background: var(--bg2);
-  color: var(--muted); cursor: pointer; font-size: 10px;
-  transition: var(--transition); font-family: var(--font-mono);
-}
-.page-btn:hover, .page-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-
-.days-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: var(--card-gap); }
-.day-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: var(--card-pad) calc(var(--card-pad) - 2px) calc(var(--card-pad) - 2px);
-  position: relative; overflow: hidden;
-  transition: var(--transition);
-}
-.day-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--border2); }
-.day-card.done { background: rgba(52,211,153,.05); border-color: rgba(52,211,153,.2); }
-.day-card.done:hover { border-color: rgba(52,211,153,.4); }
-.day-card.missed { background: rgba(248,113,113,.05); border-color: rgba(248,113,113,.2); }
-.day-card.missed:hover { border-color: rgba(248,113,113,.4); }
-.day-card.today-card { border-color: var(--accent)!important; box-shadow: 0 0 0 2px var(--accent-dim); }
-
-.day-stripe {
-  position: absolute; top: 0; left: 0; width: 2px; height: 100%;
-  border-radius: var(--radius) 0 0 var(--radius);
-}
-.day-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
-.day-num { font-size: 9px; color: var(--muted); font-weight: 500; letter-spacing: .5px; }
-.day-tag {
-  font-size: 8px; padding: 2px 7px; border-radius: 99px;
-  letter-spacing: .3px; font-weight: 600; text-transform: uppercase;
-}
-.day-today-badge {
-  font-size: 9px; padding: 2px 7px; border-radius: 99px;
-  background: var(--accent-dim); color: var(--accent);
-  border: 1px solid var(--accent-border); margin-bottom: 5px;
-  display: inline-block; letter-spacing: .5px;
-}
-.day-topic { font-size: 10px; color: var(--text2); line-height: 1.55; min-height: 32px; margin-bottom: 10px; }
-.day-note-area {
-  width: 100%; background: var(--bg3); border: 1px solid var(--border);
-  color: var(--text); font-family: var(--font-mono); font-size: 10px;
-  padding: 6px 8px; border-radius: 6px; resize: none; height: 46px;
-  transition: border-color .2s; margin-bottom: 8px; line-height: 1.4;
-}
-.day-note-area::placeholder { color: var(--muted); }
-.day-note-area:focus { outline: none; border-color: var(--accent); }
-.day-btns { display: flex; gap: 5px; }
-.day-btn {
-  flex: 1; padding: 7px; border-radius: 7px;
-  border: 1px solid var(--border); background: var(--bg3);
-  cursor: pointer; font-size: 13px; transition: var(--transition);
-}
-.day-btn:hover { transform: scale(1.06); border-color: var(--border2); }
-.day-btn.yes-active { background: rgba(52,211,153,.2); border-color: rgba(52,211,153,.5); }
-.day-btn.no-active  { background: rgba(248,113,113,.2); border-color: rgba(248,113,113,.5); }
-
-/* ══ RESOURCES ══ */
-.res-block { margin-bottom: 22px; }
-.res-section-title {
-  font-family: var(--font-head); font-size: 12px; font-weight: 700;
-  padding: 10px 16px; border-radius: 10px 10px 0 0; letter-spacing: .2px;
-}
-.res-table {
-  width: 100%; border-collapse: collapse; background: var(--bg2);
-  border-radius: 0 0 var(--radius) var(--radius); overflow: hidden;
-  border: 1px solid var(--border); border-top: none;
-}
-.res-table th {
-  font-size: 9px; letter-spacing: 1.8px; color: var(--muted);
-  padding: 9px 14px; text-align: left; border-bottom: 1px solid var(--border);
-  background: var(--bg3); text-transform: uppercase;
-}
-.res-table td {
-  padding: 11px 14px; font-size: 10px; border-bottom: 1px solid var(--border);
-  vertical-align: top; line-height: 1.55;
-}
-.res-table tr:last-child td { border-bottom: none; }
-.res-table tr:hover td { background: var(--bg3); }
-.res-link {
-  color: var(--accent); display: inline-flex; align-items: center;
-  gap: 3px; font-weight: 500; transition: opacity .2s;
-}
-.res-link:hover { opacity: .7; text-decoration: underline; }
-.res-link::after { content: '↗'; font-size: 8px; opacity: .6; }
-.res-badge {
-  display: inline-block; padding: 2px 7px; border-radius: 99px;
-  font-size: 8px; font-weight: 600; letter-spacing: .5px;
-}
-.badge-free  { background: rgba(52,211,153,.12); color: var(--green); border: 1px solid rgba(52,211,153,.25); }
-.badge-paid  { background: rgba(251,191,36,.12); color: var(--amber); border: 1px solid rgba(251,191,36,.25); }
-.badge-trial { background: rgba(167,139,250,.12); color: var(--purple); border: 1px solid rgba(167,139,250,.25); }
-.stars { color: var(--amber); font-size: 10px; letter-spacing: -1px; }
-
-/* ══ CERTS ══ */
-.cert-table {
-  width: 100%; border-collapse: collapse; background: var(--bg2);
-  border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border);
-}
-.cert-table th {
-  font-size: 9px; letter-spacing: 1.8px; color: var(--muted);
-  padding: 11px 16px; text-align: left; background: var(--bg3);
-  border-bottom: 1px solid var(--border); text-transform: uppercase;
-}
-.cert-table td { padding: 12px 16px; font-size: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.cert-table tr:last-child td { border-bottom: none; }
-.cert-table tr:hover td { background: var(--bg3); }
-.verdict-do   { color: var(--green); font-weight: 700; }
-.verdict-skip { color: var(--red); font-weight: 700; }
-.verdict-later{ color: var(--purple); font-weight: 700; }
-
-/* ══ CAREER ══ */
-.career-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.career-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 20px;
-  transition: var(--transition);
-}
-.career-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-.career-icon { font-size: 26px; margin-bottom: 10px; }
-.career-title { font-family: var(--font-head); font-size: 14px; font-weight: 800; margin-bottom: 4px; }
-.career-sal { font-family: var(--font-head); font-size: 20px; font-weight: 900; color: var(--green); margin-bottom: 10px; }
-.career-skills { font-size: 10px; color: var(--text2); line-height: 1.6; margin-bottom: 6px; }
-.career-helps { font-size: 10px; color: var(--green); line-height: 1.5; margin-bottom: 12px; }
-.career-link {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 9px; color: var(--accent); letter-spacing: .5px; text-transform: uppercase;
-  border: 1px solid var(--accent-border); padding: 5px 12px;
-  border-radius: 6px; transition: var(--transition);
-}
-.career-link:hover { background: var(--accent-dim); }
-
-/* ══ MILESTONE BANNER ══ */
-.milestone-banner {
-  background: var(--bg2); border: 1px solid rgba(52,211,153,.3);
-  border-radius: var(--radius); padding: 22px 26px; margin-bottom: 28px;
-  display: none; align-items: center; gap: 18px;
-  animation: slideIn .5s cubic-bezier(.34,1.2,.64,1);
-}
-.milestone-banner.show { display: flex; }
-@keyframes slideIn { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
-.milestone-emoji { font-size: 36px; }
-.milestone-text h3 { font-family: var(--font-head); font-size: 16px; font-weight: 800; color: var(--green); margin-bottom: 3px; }
-.milestone-text p { font-size: 11px; color: var(--text2); }
-.milestone-close { margin-left: auto; cursor: pointer; color: var(--muted); font-size: 16px; padding: 4px 8px; transition: var(--transition); }
-.milestone-close:hover { color: var(--text); }
-
-/* ══ MOTIVATION ══ */
-.motivation {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 36px; text-align: center;
-  position: relative; overflow: hidden; margin-bottom: 40px;
-  transition: var(--transition);
-}
-.motivation::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 50% -20%, var(--accent-dim), transparent 60%);
-  pointer-events: none;
-}
-.mot-quote {
-  font-family: var(--font-head);
-  font-size: clamp(14px,2.5vw,19px); font-weight: 700;
-  color: var(--text); margin-bottom: 10px; position: relative; letter-spacing: -.2px;
-}
-.mot-sub { font-size: 11px; color: var(--muted); position: relative; }
-.mot-progress-ring { width: 76px; height: 76px; margin: 0 auto 16px; position: relative; }
-.mot-progress-ring svg { transform: rotate(-90deg); }
-.mot-ring-bg { fill: none; stroke: var(--bg4); stroke-width: 5; }
-.mot-ring-fill { fill: none; stroke: url(#ringGrad); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
-.mot-ring-pct {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  font-family: var(--font-head); font-size: 15px; font-weight: 900; color: var(--accent);
-}
-
-/* ══ TOAST ══ */
-#toast {
-  position: fixed; bottom: 22px; right: 22px; z-index: 9999;
-  background: var(--bg2); border: 1px solid var(--border2);
-  border-radius: 10px; padding: 12px 16px; font-size: 11px;
-  color: var(--text); box-shadow: var(--shadow-lg);
-  transform: translateY(80px); opacity: 0;
-  transition: all .35s cubic-bezier(.34,1.56,.64,1);
-  pointer-events: none; display: flex; align-items: center; gap: 10px; max-width: 280px;
-}
-
-/* ══ CONFETTI ══ */
-#confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9998; pointer-events: none; display: none; }
-
-/* ══ FOOTER ══ */
-footer {
-  text-align: center; padding: 24px 16px; font-size: 10px;
-  color: var(--muted); border-top: 1px solid var(--border);
-  position: relative; z-index: 1; line-height: 1.8; letter-spacing: .3px;
-}
-
-/* ══ RESPONSIVE ══ */
-@media(max-width:900px){
-  .charts-grid{grid-template-columns:1fr}
-  .chart-card.full{grid-column:1}
-  .phases-grid{grid-template-columns:1fr 1fr}
-  .career-grid{grid-template-columns:1fr 1fr}
-  .cert-table th:nth-child(5),.cert-table td:nth-child(5),
-  .cert-table th:nth-child(6),.cert-table td:nth-child(6){display:none}
-}
-@media(max-width:600px){
-  nav{padding:0 12px}
-  .nav-links{display:none}
-  .nav-right .btn{display:none}
-  .hamburger{display:flex}
-  .bottom-tabs{display:grid}
-  body{padding-bottom:72px}
-  .container{padding:0 12px}
-  .hero{padding:22px 0 14px}
-  .stats-grid{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-  .stat-card{padding:13px}
-  .section-toggle{display:block}
-  .charts-grid,.phases-grid,.career-grid{grid-template-columns:1fr}
-  .chart-card.full{grid-column:1}
-  .tracker-toolbar{flex-direction:column;align-items:flex-start}
-  .page-group{align-self:flex-end}
-  .days-grid{grid-template-columns:1fr 1fr;gap:8px}
-  .day-card{padding:10px 9px 9px 11px}
-  .day-topic{font-size:9px;min-height:26px}
-  .day-note-area{height:38px;font-size:9px}
-  .res-table th:nth-child(3),.res-table td:nth-child(3),
-  .res-table th:nth-child(6),.res-table td:nth-child(6){display:none}
-  .cert-table th:nth-child(3),.cert-table td:nth-child(3),
-  .cert-table th:nth-child(4),.cert-table td:nth-child(4),
-  .cert-table th:nth-child(5),.cert-table td:nth-child(5),
-  .cert-table th:nth-child(6),.cert-table td:nth-child(6){display:none}
-  .motivation{padding:22px 16px}
-  #toast{bottom:80px;right:12px;left:12px;max-width:unset}
-  .start-date-wrap{padding:12px 14px}
-  .deadline-display{margin-left:0;width:100%}
-  .ctrl-bar{gap:2px}
-  .accent-picker{gap:3px;padding:0 2px}
-  .accent-dot{width:12px;height:12px}
-}
-@media(max-width:380px){ .days-grid{grid-template-columns:1fr} }
-</style>
+<link rel="stylesheet" href="style.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 </head>
 <body>
 
 <canvas id="confetti-canvas"></canvas>
 
-<!-- NAV -->
+<!-- ══ KEYBOARD OVERLAY ══ -->
+<div class="kbd-overlay" id="kbd-overlay" onclick="this.classList.remove('show')">
+  <div class="kbd-panel" onclick="event.stopPropagation()">
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <div class="kbd-row"><span class="kbd-desc">Mark next day Done</span>     <kbd class="kbd">D</kbd></div>
+    <div class="kbd-row"><span class="kbd-desc">Mark next day Missed</span>   <kbd class="kbd">M</kbd></div>
+    <div class="kbd-row"><span class="kbd-desc">Freeze next day ❄️</span>    <kbd class="kbd">F</kbd></div>
+    <div class="kbd-row"><span class="kbd-desc">Focus on next day</span>      <kbd class="kbd">N</kbd></div>
+    <div class="kbd-row"><span class="kbd-desc">Focus search bar</span>       <kbd class="kbd">/</kbd></div>
+    <div class="kbd-row"><span class="kbd-desc">Toggle theme</span>           <kbd class="kbd">T</kbd></div>
+    <div class="kbd-row"><span class="kbd-desc">Toggle this panel</span>      <kbd class="kbd">?</kbd></div>
+    <div class="kbd-row"><span class="kbd-desc">Close modals</span>           <kbd class="kbd">Esc</kbd></div>
+    <br/><button class="pomo-btn primary" onclick="document.getElementById('kbd-overlay').classList.remove('show')">Close</button>
+  </div>
+</div>
+
+<!-- ══ POMODORO MODAL ══ -->
+<div class="modal-overlay" id="pomo-modal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closePomodoro()">✕</button>
+    <div class="modal-title">⏱ Pomodoro Timer</div>
+    <div class="modal-sub">Stay focused. Study time auto-logs to your next pending day.</div>
+    <div class="pomo-ring-wrap">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle class="pomo-ring-bg"   cx="70" cy="70" r="45" stroke-dasharray="282"/>
+        <circle class="pomo-ring-fill" cx="70" cy="70" r="45" id="pomo-ring" stroke-dasharray="282" stroke-dashoffset="0"/>
+      </svg>
+      <div class="pomo-time-display" id="pomo-time">25:00</div>
+    </div>
+    <div class="pomo-phase-label" id="pomo-phase">FOCUS TIME 💪</div>
+    <div class="pomo-controls">
+      <button class="pomo-btn primary" id="pomo-start" onclick="startPomo()">Start</button>
+      <button class="pomo-btn" onclick="pausePomo()">Pause</button>
+      <button class="pomo-btn" onclick="resetPomo()">Reset</button>
+    </div>
+    <div class="pomo-sessions">
+      <div style="margin-bottom:6px;font-size:10px;color:var(--muted)">Sessions completed (4 = long break)</div>
+      <div class="pomo-session-dots" id="pomo-dots">
+        <div class="pomo-dot"></div><div class="pomo-dot"></div>
+        <div class="pomo-dot"></div><div class="pomo-dot"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BOSS BATTLE MODAL ══ -->
+<div class="modal-overlay boss-modal" id="boss-modal">
+  <div class="modal" style="position:relative;text-align:center">
+    <button class="modal-close" onclick="document.getElementById('boss-modal').classList.remove('show')">✕</button>
+    <div class="boss-emoji" id="boss-emoji">🏆</div>
+    <div class="boss-title" id="boss-title">Phase Complete!</div>
+    <div class="boss-msg"   id="boss-msg">Incredible work.</div>
+    <div class="boss-xp-chip" id="boss-xp">+400 XP</div>
+    <button class="pomo-btn primary" onclick="document.getElementById('boss-modal').classList.remove('show')">
+      Claim Reward & Continue 🚀
+    </button>
+  </div>
+</div>
+
+<!-- ══ SHARE MODAL ══ -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="document.getElementById('share-modal').classList.remove('show')">✕</button>
+    <div class="modal-title">🔗 Share Progress</div>
+    <div class="modal-sub">Anyone with this link can see your current progress (read-only).</div>
+    <div class="share-url-box" id="share-url-display">Generating link...</div>
+    <div style="display:flex;gap:8px">
+      <button class="pomo-btn primary" onclick="App.copyShareUrl()">📋 Copy Link</button>
+      <button class="pomo-btn" onclick="document.getElementById('share-modal').classList.remove('show')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
 <nav>
   <div class="nav-logo">
-    <div class="nav-logo-pulse"></div>
+    <div class="nav-pulse"></div>
     ☁️ Cloud<span style="color:var(--muted);font-weight:400">Sec</span>
   </div>
   <div class="nav-links">
-    <a class="nav-link active" href="#overview" onclick="setActive(this)">Overview</a>
-    <a class="nav-link" href="#tracker" onclick="setActive(this)">Tracker</a>
-    <a class="nav-link" href="#charts" onclick="setActive(this)">Charts</a>
-    <a class="nav-link" href="#phases" onclick="setActive(this)">Phases</a>
-    <a class="nav-link" href="#resources" onclick="setActive(this)">Resources</a>
-    <a class="nav-link" href="#certs" onclick="setActive(this)">Certs</a>
-    <a class="nav-link" href="#career" onclick="setActive(this)">Career</a>
+    <a class="nav-link active" href="#overview"  onclick="setActive(this)">Overview</a>
+    <a class="nav-link"        href="#tracker"   onclick="setActive(this)">Tracker</a>
+    <a class="nav-link"        href="#charts"    onclick="setActive(this)">Charts</a>
+    <a class="nav-link"        href="#phases"    onclick="setActive(this)">Phases</a>
+    <a class="nav-link"        href="#resources" onclick="setActive(this)">Resources</a>
+    <a class="nav-link"        href="#certs"     onclick="setActive(this)">Certs</a>
+    <a class="nav-link"        href="#career"    onclick="setActive(this)">Career</a>
   </div>
   <div class="nav-right">
-    <!-- Mega control bar -->
+    <!-- Search -->
+    <div class="nav-search-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="search-input" type="text" placeholder="Search topics... (/)"/>
+      <div class="search-results" id="search-results"></div>
+    </div>
+
+    <!-- Mega Control Bar -->
     <div class="ctrl-bar">
-      <!-- Theme toggle -->
       <div class="theme-toggle">
-        <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
-        <button class="theme-btn" id="btn-light" onclick="setTheme('light')" title="Light mode">☀️</button>
+        <button class="theme-btn active" id="btn-dark"  onclick="setThemeFromState('dark')"  title="Dark">🌙</button>
+        <button class="theme-btn"        id="btn-light" onclick="setThemeFromState('light')" title="Light">☀️</button>
       </div>
-      <div class="ctrl-divider"></div>
-      <!-- Accent dots -->
+      <div class="ctrl-div"></div>
       <div class="accent-picker">
         <div class="accent-dot active" data-a="blue"   onclick="setAccent('blue')"   title="Blue"></div>
         <div class="accent-dot"        data-a="green"  onclick="setAccent('green')"  title="Green"></div>
         <div class="accent-dot"        data-a="purple" onclick="setAccent('purple')" title="Purple"></div>
         <div class="accent-dot"        data-a="amber"  onclick="setAccent('amber')"  title="Amber"></div>
       </div>
-      <div class="ctrl-divider"></div>
-      <!-- Density -->
-      <button class="density-btn active" id="btn-comfortable" onclick="setDensity('comfortable')" title="Comfortable density">⊞</button>
-      <button class="density-btn" id="btn-compact" onclick="setDensity('compact')" title="Compact density">⊟</button>
+      <div class="ctrl-div"></div>
+      <button class="density-btn active" id="btn-comfortable" onclick="setDensity('comfortable')" title="Comfortable">⊞</button>
+      <button class="density-btn"        id="btn-compact"     onclick="setDensity('compact')"     title="Compact">⊟</button>
     </div>
-    <button class="btn btn-ghost" onclick="exportData()">⬇</button>
-    <label class="btn btn-ghost" style="cursor:pointer">⬆<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
+
+    <!-- Actions -->
+    <button class="btn btn-ghost" onclick="openPomodoro()" title="Pomodoro Timer">⏱</button>
+    <button class="btn btn-ghost" onclick="App.shareUrl()"  title="Share Progress">🔗</button>
+    <button class="btn btn-ghost" onclick="App.exportData()" title="Export JSON">⬇</button>
+    <label  class="btn btn-ghost" style="cursor:pointer" title="Import JSON">⬆<input type="file" accept=".json" onchange="App.importData(event)" style="display:none"/></label>
+    <button class="btn btn-ghost" onclick="App.exportPdf()" title="Export PDF Report">📄</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('kbd-overlay').classList.add('show')" title="Keyboard shortcuts">?</button>
     <button class="hamburger" id="hamburger" onclick="toggleDrawer()">
       <span></span><span></span><span></span>
     </button>
   </div>
 </nav>
 
-<!-- MOBILE DRAWER -->
-<div class="mobile-drawer" id="mobile-drawer">
-  <a class="nav-link active" href="#overview" onclick="drawerNav(this,'#overview')">📋 Overview</a>
-  <a class="nav-link" href="#tracker" onclick="drawerNav(this,'#tracker')">📅 Tracker</a>
-  <a class="nav-link" href="#charts" onclick="drawerNav(this,'#charts')">📊 Charts</a>
-  <a class="nav-link" href="#phases" onclick="drawerNav(this,'#phases')">🗂️ Phases</a>
-  <a class="nav-link" href="#resources" onclick="drawerNav(this,'#resources')">📚 Resources</a>
-  <a class="nav-link" href="#certs" onclick="drawerNav(this,'#certs')">🏅 Certs</a>
-  <a class="nav-link" href="#career" onclick="drawerNav(this,'#career')">💼 Career</a>
-  <div class="mob-action-row">
-    <button class="btn btn-ghost" onclick="exportData();toggleDrawer()">⬇ Export</button>
-    <label class="btn btn-ghost" style="cursor:pointer;text-align:center">⬆ Import<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
+<!-- ══ MOBILE DRAWER ══ -->
+<div class="mob-drawer" id="mob-drawer">
+  <a class="nav-link active" href="#overview"  onclick="drawerNav(this,'#overview')">📋 Overview</a>
+  <a class="nav-link"        href="#tracker"   onclick="drawerNav(this,'#tracker')">📅 Tracker</a>
+  <a class="nav-link"        href="#charts"    onclick="drawerNav(this,'#charts')">📊 Charts</a>
+  <a class="nav-link"        href="#phases"    onclick="drawerNav(this,'#phases')">🗂️ Phases</a>
+  <a class="nav-link"        href="#resources" onclick="drawerNav(this,'#resources')">📚 Resources</a>
+  <a class="nav-link"        href="#certs"     onclick="drawerNav(this,'#certs')">🏅 Certs</a>
+  <a class="nav-link"        href="#career"    onclick="drawerNav(this,'#career')">💼 Career</a>
+  <div class="mob-act-row">
+    <button class="btn btn-ghost" onclick="openPomodoro();toggleDrawer()">⏱ Pomodoro</button>
+    <button class="btn btn-ghost" onclick="App.exportData();toggleDrawer()">⬇ Export</button>
+    <label  class="btn btn-ghost" style="cursor:pointer;text-align:center">⬆ Import<input type="file" accept=".json" onchange="App.importData(event)" style="display:none"/></label>
   </div>
 </div>
 
-<!-- BOTTOM TABS -->
+<!-- ══ BOTTOM TABS ══ -->
 <div class="bottom-tabs" id="bottom-tabs">
   <button class="tab-item active" onclick="tabNav(this,'#overview')"><span class="tab-icon">📋</span><span class="tab-lbl">Overview</span></button>
-  <button class="tab-item" onclick="tabNav(this,'#tracker')"><span class="tab-icon">📅</span><span class="tab-lbl">Tracker</span></button>
-  <button class="tab-item" onclick="tabNav(this,'#charts')"><span class="tab-icon">📊</span><span class="tab-lbl">Charts</span></button>
-  <button class="tab-item" onclick="tabNav(this,'#resources')"><span class="tab-icon">📚</span><span class="tab-lbl">Resources</span></button>
-  <button class="tab-item" onclick="tabNav(this,'#career')"><span class="tab-icon">💼</span><span class="tab-lbl">Career</span></button>
+  <button class="tab-item"        onclick="tabNav(this,'#tracker')"> <span class="tab-icon">📅</span><span class="tab-lbl">Tracker</span></button>
+  <button class="tab-item"        onclick="tabNav(this,'#charts')">  <span class="tab-icon">📊</span><span class="tab-lbl">Charts</span></button>
+  <button class="tab-item"        onclick="tabNav(this,'#resources')"><span class="tab-icon">📚</span><span class="tab-lbl">Resources</span></button>
+  <button class="tab-item"        onclick="tabNav(this,'#career')">  <span class="tab-icon">💼</span><span class="tab-lbl">Career</span></button>
 </div>
 
-<!-- TOAST -->
+<!-- ══ TOAST ══ -->
 <div id="toast">
   <span id="toast-icon" style="font-size:17px">✅</span>
   <span id="toast-msg">Saved!</span>
 </div>
 
-<!-- ═══ OVERVIEW ═══ -->
+<!-- ══════════════════════════════
+     OVERVIEW
+═══════════════════════════════════ -->
 <div id="overview" class="container" style="padding-top:0">
   <div class="hero">
     <div class="hero-eyebrow">📍 <span>Cybersecurity Student</span> · Intermediate · 100-Day Plan</div>
@@ -782,79 +179,132 @@ footer {
       <span class="t1">Cloud Security</span>
       <span class="t2">100-Day Roadmap</span>
     </h1>
-    <p class="hero-sub">AWS Cloud Practitioner → CompTIA Security+. Mark each day done or missed. Notes save per day. All progress stored locally in your browser.</p>
+    <p class="hero-sub">AWS Cloud Practitioner → CompTIA Security+. Mark days done, log study time, earn XP, unlock ranks. All data saved locally — no accounts needed.</p>
     <div class="hero-meta">
       <div class="hero-badge" id="hero-today-badge">📅 <strong>Set a start date below</strong></div>
       <div class="hero-badge">🎯 <strong>Target:</strong> AWS CCP + CompTIA Sec+</div>
-      <div class="hero-badge">💾 <strong>Auto-saved</strong> locally</div>
+      <div class="hero-badge">💾 <strong>Auto-saved</strong> locally · Export/Import anytime</div>
     </div>
   </div>
 
+  <!-- XP RANK BAR -->
+  <div class="xp-bar-wrap">
+    <div class="rank-icon" id="rank-icon">☁️</div>
+    <div class="rank-info">
+      <div class="rank-name" id="rank-name">Cloud Novice</div>
+      <div class="rank-xp-text" id="rank-xp-text">0 / 200 XP to Cloud Apprentice</div>
+      <div class="rank-bar"><div class="rank-bar-fill" id="rank-bar-fill" style="width:0%"></div></div>
+    </div>
+    <div class="rank-total-xp" id="rank-xp-total">0 XP</div>
+  </div>
+
   <!-- START DATE -->
-  <div class="start-date-wrap">
+  <div class="start-wrap">
     <label>🗓️ Start Date</label>
     <input type="date" id="start-date" oninput="saveStartDate()" aria-label="Set start date"/>
-    <div class="deadline-display" id="deadline-display">Set a start date to see your exam deadlines →</div>
+    <div class="deadline-txt" id="deadline-display">Set a start date to see your exam deadlines →</div>
   </div>
 
   <!-- MILESTONE BANNER -->
   <div class="milestone-banner" id="milestone-banner">
-    <div class="milestone-emoji" id="milestone-emoji">🎉</div>
-    <div class="milestone-text">
-      <h3 id="milestone-title">Milestone reached!</h3>
-      <p id="milestone-msg">Keep going!</p>
+    <div class="m-emoji" id="m-emoji">🎉</div>
+    <div class="m-text">
+      <h3 id="m-title">Milestone!</h3>
+      <p  id="m-msg">Keep going!</p>
     </div>
-    <span class="milestone-close" onclick="document.getElementById('milestone-banner').classList.remove('show')">✕</span>
+    <span class="m-close" onclick="document.getElementById('milestone-banner').classList.remove('show')">✕</span>
   </div>
 
   <!-- STATS -->
   <div class="stats-grid">
-    <div class="stat-card green">
+    <div class="stat-card s-green">
       <span class="stat-icon">✅</span>
-      <div class="stat-val" id="stat-done" style="color:var(--green)">0</div>
-      <div class="stat-lbl">Days Completed</div>
-      <div class="stat-bar"><div class="stat-bar-fill" id="bar-done" style="background:var(--green);width:0%"></div></div>
+      <div class="stat-val" id="stat-done"   style="color:#34d399">0</div>
+      <div class="stat-lbl">Days Done</div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="bar-done" style="background:#34d399;width:0%"></div></div>
     </div>
-    <div class="stat-card red">
+    <div class="stat-card s-red">
       <span class="stat-icon">❌</span>
-      <div class="stat-val" id="stat-missed" style="color:var(--red)">0</div>
+      <div class="stat-val" id="stat-missed" style="color:#f87171">0</div>
       <div class="stat-lbl">Days Missed</div>
-      <div class="stat-bar"><div class="stat-bar-fill" id="bar-missed" style="background:var(--red);width:0%"></div></div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="bar-missed" style="background:#f87171;width:0%"></div></div>
     </div>
-    <div class="stat-card amber">
-      <span class="stat-icon" style="animation:pulse 2s infinite;display:inline-block">🔥</span>
-      <div class="stat-val" id="stat-streak" style="color:var(--amber)">0</div>
-      <div class="stat-lbl">Day Streak</div>
-      <div class="stat-bar"><div class="stat-bar-fill" id="bar-streak" style="background:var(--amber);width:0%"></div></div>
+    <div class="stat-card s-amber" style="animation:none">
+      <span class="stat-icon">🔥</span>
+      <div class="stat-val" id="stat-streak" style="color:#fbbf24">0</div>
+      <div class="stat-lbl">Streak</div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="bar-streak" style="background:#fbbf24;width:0%"></div></div>
     </div>
-    <div class="stat-card blue">
+    <div class="stat-card s-ac">
       <span class="stat-icon">📈</span>
-      <div class="stat-val" id="stat-pct" style="color:var(--accent)">0%</div>
-      <div class="stat-lbl">Overall Progress</div>
-      <div class="stat-bar"><div class="stat-bar-fill" id="bar-pct" style="background:var(--accent);width:0%"></div></div>
+      <div class="stat-val" id="stat-pct" style="color:var(--ac)">0%</div>
+      <div class="stat-lbl">Progress</div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="bar-pct" style="background:var(--ac);width:0%"></div></div>
+    </div>
+    <div class="stat-card s-purple">
+      <span class="stat-icon">❄️</span>
+      <div class="stat-val" id="stat-frozen" style="color:#a78bfa">0</div>
+      <div class="stat-lbl">Frozen Days</div>
+    </div>
+    <div class="stat-card s-amber">
+      <span class="stat-icon">⏱</span>
+      <div class="stat-val" id="stat-time" style="color:#fbbf24;font-size:22px">—</div>
+      <div class="stat-lbl">Total Study Time</div>
     </div>
   </div>
 
   <!-- JOURNEY BAR -->
   <div class="journey-card">
-    <div class="journey-header">
-      <span class="journey-label">Journey Progress</span>
-      <span class="journey-count" id="progress-text">0 / 100 days</span>
+    <div class="journey-hdr">
+      <span class="journey-lbl">Journey Progress</span>
+      <span class="journey-cnt" id="progress-text">0 / 100 days</span>
     </div>
     <div class="journey-track">
-      <div class="journey-done" id="global-green" style="width:0%"></div>
-      <div class="journey-missed" id="global-red" style="width:0%;left:0%"></div>
+      <div class="j-done"   id="global-green"  style="width:0%"></div>
+      <div class="j-missed" id="global-red"    style="width:0%;left:0%"></div>
+      <div class="j-frozen" id="global-frozen" style="width:0%;left:0%"></div>
     </div>
     <div class="phase-legend">
-      <div class="phase-dot"><div class="phase-dot-pip" style="background:#60a5fa"></div>Phase 1: Days 1–30</div>
-      <div class="phase-dot"><div class="phase-dot-pip" style="background:#34d399"></div>Phase 2: Days 31–60</div>
-      <div class="phase-dot"><div class="phase-dot-pip" style="background:#fbbf24"></div>Phase 3: Days 61–75</div>
-      <div class="phase-dot"><div class="phase-dot-pip" style="background:#f87171"></div>Phase 4: Days 76–100</div>
+      <div class="phase-dot"><div class="phase-pip" style="background:#60a5fa"></div>Phase 1: Days 1–30</div>
+      <div class="phase-dot"><div class="phase-pip" style="background:#34d399"></div>Phase 2: Days 31–60</div>
+      <div class="phase-dot"><div class="phase-pip" style="background:#fbbf24"></div>Phase 3: Days 61–75</div>
+      <div class="phase-dot"><div class="phase-pip" style="background:#f87171"></div>Phase 4: Days 76–100</div>
+    </div>
+  </div>
+
+  <!-- FORECAST CARD -->
+  <div class="forecast-card">
+    <div class="forecast-icon">🔮</div>
+    <div class="forecast-info">
+      <div class="forecast-title">Completion Forecast</div>
+      <div class="forecast-val" id="forecast-val">—</div>
+      <div class="forecast-sub" id="forecast-sub">Set a start date to calculate</div>
+    </div>
+    <div class="forecast-badges">
+      <div class="f-badge" id="forecast-status">Set start date</div>
+    </div>
+  </div>
+
+  <!-- REMINDER -->
+  <div class="reminder-card">
+    <div class="reminder-icon">🔔</div>
+    <div class="reminder-info">
+      <div class="reminder-title">Daily Study Reminder</div>
+      <div class="reminder-sub">Get a browser notification to study each day</div>
+    </div>
+    <div class="reminder-controls">
+      <input type="time" class="reminder-time" id="reminder-time" value="20:00" onchange="saveReminder()"/>
+      <label class="toggle-switch">
+        <input type="checkbox" id="reminder-toggle" onchange="saveReminder()"/>
+        <span class="toggle-slider"></span>
+      </label>
     </div>
   </div>
 </div>
 
-<!-- ═══ CHARTS ═══ -->
+<!-- ══════════════════════════════
+     CHARTS
+═══════════════════════════════════ -->
 <div id="charts" class="container section">
   <div class="section-hdr" onclick="toggleSection('charts-body')">
     <span class="section-num">01</span>
@@ -866,40 +316,47 @@ footer {
     <div class="charts-grid">
       <div class="chart-card">
         <div class="chart-title">Overall Breakdown</div>
-        <div class="chart-sub">Completed · Missed · Remaining</div>
+        <div class="chart-sub">Completed · Missed · Frozen · Remaining</div>
         <div style="height:230px;position:relative">
           <canvas id="pieChart"></canvas>
           <div id="pie-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div style="font-family:var(--font-head);font-size:28px;font-weight:900;color:var(--green)" id="pie-pct-text">0%</div>
+            <div style="font-family:var(--font-head);font-size:28px;font-weight:900;color:#34d399" id="pie-pct-text">0%</div>
             <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Done</div>
           </div>
         </div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Weekly Performance</div>
-        <div class="chart-sub">Done vs Missed per week</div>
+        <div class="chart-title">Weekly Performance + Study Hours</div>
+        <div class="chart-sub">Done · Missed · Study hours (right axis)</div>
         <div style="height:230px"><canvas id="barChart"></canvas></div>
       </div>
       <div class="chart-card full">
         <div class="chart-title">Cumulative Progress vs Ideal</div>
-        <div class="chart-sub">Your progress · Dashed = ideal 1 day/day pace</div>
+        <div class="chart-sub">Blue = your progress · Dashed = ideal 1 day/day</div>
         <div style="height:200px"><canvas id="lineChart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Phase Completion Radar</div>
-        <div class="chart-sub">Progress across each phase</div>
+        <div class="chart-sub">Progress across all 4 phases</div>
         <div style="height:230px"><canvas id="radarChart"></canvas></div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Daily Activity Heatmap</div>
-        <div class="chart-sub">Green = done · Red = missed · Grey = pending</div>
-        <div style="height:230px"><canvas id="heatChart"></canvas></div>
+        <div class="chart-title">Daily Study Time (minutes)</div>
+        <div class="chart-sub">Study minutes logged per day</div>
+        <div style="height:230px"><canvas id="studyChart"></canvas></div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Activity Heatmap</div>
+        <div class="chart-sub">Green = done · Red = missed · Blue = frozen · Click to jump to day</div>
+        <div class="heatmap-wrap" id="heatmap-wrap"></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ PHASES ═══ -->
+<!-- ══════════════════════════════
+     PHASES
+═══════════════════════════════════ -->
 <div id="phases" class="container section">
   <div class="section-hdr" onclick="toggleSection('phases-body')">
     <span class="section-num">02</span>
@@ -912,7 +369,9 @@ footer {
   </div>
 </div>
 
-<!-- ═══ TRACKER ═══ -->
+<!-- ══════════════════════════════
+     TRACKER
+═══════════════════════════════════ -->
 <div id="tracker" class="container section">
   <div class="section-hdr" onclick="toggleSection('tracker-body')">
     <span class="section-num">03</span>
@@ -921,12 +380,24 @@ footer {
     <span class="section-toggle" id="toggle-tracker-body">▾</span>
   </div>
   <div class="section-body" id="tracker-body">
+    <!-- Shortcuts bar -->
+    <div class="shortcuts-bar">
+      <div class="shortcut-item"><kbd class="kbd">D</kbd> Mark done</div>
+      <div class="shortcut-item"><kbd class="kbd">M</kbd> Mark missed</div>
+      <div class="shortcut-item"><kbd class="kbd">F</kbd> Freeze day</div>
+      <div class="shortcut-item"><kbd class="kbd">N</kbd> Go to next day</div>
+      <div class="shortcut-item"><kbd class="kbd">/</kbd> Search</div>
+      <div class="shortcut-item"><kbd class="kbd">T</kbd> Toggle theme</div>
+      <div class="shortcut-item" style="margin-left:auto"><kbd class="kbd">?</kbd> All shortcuts</div>
+    </div>
+
     <div class="tracker-toolbar">
       <div class="filter-group">
-        <button class="filter-btn active" onclick="setFilter('all',this)">All Days</button>
-        <button class="filter-btn" onclick="setFilter('done',this)">✅ Done</button>
-        <button class="filter-btn" onclick="setFilter('missed',this)">❌ Missed</button>
-        <button class="filter-btn" onclick="setFilter('pending',this)">⏳ Pending</button>
+        <button class="filter-btn active" onclick="App.setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="App.setFilter('done',this)">✅ Done</button>
+        <button class="filter-btn" onclick="App.setFilter('missed',this)">❌ Missed</button>
+        <button class="filter-btn" onclick="App.setFilter('pending',this)">⏳ Pending</button>
+        <button class="filter-btn" onclick="App.setFilter('frozen',this)">❄️ Frozen</button>
       </div>
       <div class="page-group" id="page-btns"></div>
     </div>
@@ -934,11 +405,13 @@ footer {
   </div>
 </div>
 
-<!-- ═══ RESOURCES ═══ -->
+<!-- ══════════════════════════════
+     RESOURCES
+═══════════════════════════════════ -->
 <div id="resources" class="container section">
   <div class="section-hdr" onclick="toggleSection('resources-body')">
     <span class="section-num">04</span>
-    <h2 class="section-title">📚 Free Resources</h2>
+    <h2 class="section-title">📚 Resources & Checklist</h2>
     <div class="section-line"></div>
     <span class="section-toggle" id="toggle-resources-body">▾</span>
   </div>
@@ -947,7 +420,9 @@ footer {
   </div>
 </div>
 
-<!-- ═══ CERTS ═══ -->
+<!-- ══════════════════════════════
+     CERTS
+═══════════════════════════════════ -->
 <div id="certs" class="container section">
   <div class="section-hdr" onclick="toggleSection('certs-body')">
     <span class="section-num">05</span>
@@ -971,7 +446,9 @@ footer {
   </div>
 </div>
 
-<!-- ═══ CAREER ═══ -->
+<!-- ══════════════════════════════
+     CAREER
+═══════════════════════════════════ -->
 <div id="career" class="container section">
   <div class="section-hdr" onclick="toggleSection('career-body')">
     <span class="section-num">06</span>
@@ -995,798 +472,69 @@ footer {
         </linearGradient>
       </defs>
     </svg>
-    <div class="mot-progress-ring">
+    <div class="mot-ring-wrap">
       <svg width="76" height="76" viewBox="0 0 76 76">
-        <circle class="mot-ring-bg" cx="38" cy="38" r="32"/>
+        <circle class="mot-ring-bg"   cx="38" cy="38" r="32"/>
         <circle class="mot-ring-fill" id="mot-ring-fill" cx="38" cy="38" r="32"
           stroke-dasharray="201" stroke-dashoffset="201"/>
       </svg>
-      <div class="mot-ring-pct" id="mot-ring-pct">0%</div>
+      <div class="mot-pct" id="mot-ring-pct">0%</div>
     </div>
     <div class="mot-quote" id="motivational-quote">"Every expert was once a beginner. Start today."</div>
-    <div class="mot-sub">Keep going. Day <strong id="mot-next" style="color:var(--accent)">1</strong> is waiting for you. 🚀</div>
+    <div class="mot-sub">Keep going. Day <strong id="mot-next" style="color:var(--ac)">1</strong> is waiting. 🚀</div>
   </div>
 </div>
 
 <footer>
   Built for a Cybersecurity Student · 100-Day Cloud Security Journey<br>
-  AWS CCP → CompTIA Security+ · All data saved locally · No accounts needed
+  AWS CCP → CompTIA Security+ · All data local · No accounts · Press <kbd class="kbd" style="font-size:9px">?</kbd> for shortcuts
 </footer>
 
+<!-- ══ SCRIPTS ══ -->
+<script src="data.js"></script>
+<script src="state.js"></script>
+<script src="app.js"></script>
 <script>
-// ═══ DATA ═══
-const PHASES = [
-  {name:"Phase 1",label:"Cloud Fundamentals",days:[1,30],color:"#60a5fa",bg:"rgba(96,165,250,.06)",border:"rgba(96,165,250,.18)",dark:"#0c1a2e"},
-  {name:"Phase 2",label:"Cloud Security Deep Dive",days:[31,60],color:"#34d399",bg:"rgba(52,211,153,.06)",border:"rgba(52,211,153,.18)",dark:"#052e1a"},
-  {name:"Phase 3",label:"AWS CCP Exam + Bridge",days:[61,75],color:"#fbbf24",bg:"rgba(251,191,36,.06)",border:"rgba(251,191,36,.18)",dark:"#2d1a00"},
-  {name:"Phase 4",label:"Security+ Intensive",days:[76,100],color:"#f87171",bg:"rgba(248,113,113,.06)",border:"rgba(248,113,113,.18)",dark:"#2d0a0a"},
-];
+// ══ BOOT ══
+window.addEventListener("DOMContentLoaded", () => {
+  loadState();
 
-const TOPICS = {
-  1:"Cloud Basics & AWS Account Setup",2:"AWS Regions, AZs & Edge Locations",3:"Core AWS Services Overview",4:"AWS Free Tier Hands-on Lab",5:"EC2 Introduction & Launch",6:"S3 Buckets — Create & Configure",7:"Week 1 Review & Quiz",
-  8:"IAM Users, Groups & Permissions",9:"IAM Policies (JSON deep dive)",10:"IAM Roles & Trust Policies",11:"MFA Setup & Best Practices",12:"Least Privilege Principle",13:"IAM Best Practices Checklist",14:"Week 2 Review & Mock IAM Scenarios",
-  15:"VPC Concepts & Architecture",16:"Subnets, Route Tables & Gateways",17:"Security Groups (Stateful)",18:"Network ACLs (Stateless)",19:"VPC Peering & Endpoints",20:"Internet & NAT Gateway",21:"Week 3 Review — Build a VPC",
-  22:"S3 Security & Bucket Policies",23:"S3 Encryption & Versioning",24:"EC2 Deep Dive (AMI, Types)",25:"EBS, EFS & Storage Types",26:"RDS & Database Security",27:"AWS Lambda & Serverless",28:"CloudFormation Basics",29:"AWS Billing, Cost & Budgets",30:"Phase 1 Complete Review + Mock",
-  31:"Cloud Threat Landscape Overview",32:"OWASP Cloud Security Top 10",33:"Shared Responsibility Model",34:"Data Classification in Cloud",35:"Cloud Attack Vectors & TTPs",36:"Threat Modeling for Cloud Apps",37:"Week 5 Review",
-  38:"AWS CloudTrail Setup & Analysis",39:"CloudWatch Alarms & Dashboards",40:"AWS GuardDuty Configuration",41:"AWS Config & Compliance",42:"AWS Security Hub Overview",43:"SIEM Basics & Log Analysis",44:"Week 6 Review",
-  45:"S3 Misconfiguration Attack Lab",46:"IAM Privilege Escalation Paths",47:"CloudGoat Scenario 1",48:"CloudGoat Scenario 2",49:"Pacu AWS Exploitation Framework",50:"HackTricks Cloud Reference",51:"Week 7 Review",
-  52:"AWS CCP Mock Exam 1",53:"Mock 1 Review & Gap Analysis",54:"AWS CCP Mock Exam 2",55:"Weak Area Deep Dive",56:"AWS CCP Mock Exam 3",57:"Final Service Review",58:"Exam Strategy & Time Management",59:"Rest, Light Revision Only",60:"Phase 2 Complete Review",
-  61:"CCP Final Cram — Cloud Concepts",62:"CCP Final Cram — Security Domain",63:"🎯 AWS CCP EXAM DAY",64:"Post-Exam Review & Reflection",65:"Security+ Overview & Domains",66:"Domain Mapping to Your Background",67:"Week 9 Review & Planning",
-  68:"Security+ Study Schedule",69:"Prof Messer SY0-701 — Threats",70:"Prof Messer — Architecture",71:"Prof Messer — Implementation",72:"Practice Questions Set 1",73:"Practice Questions Set 2",74:"Domain Gap Analysis",75:"Phase 3 Review",
-  76:"Threats Domain — Malware Types",77:"Social Engineering Techniques",78:"Application & Network Attacks",79:"Vulnerability Scanning Methods",80:"Penetration Testing Concepts",81:"Risk Management Basics",82:"Week 11 Review",
-  83:"Network Security Concepts",84:"Zero Trust Architecture",85:"Cryptography Fundamentals",86:"PKI, Certs & Digital Signatures",87:"Security Protocols (TLS, SSH)",88:"Cloud Security Architecture",89:"Week 12 Review",
-  90:"Incident Response Process",91:"Digital Forensics Basics",92:"SIEM & Log Analysis Lab",93:"Blue Team Labs Online",94:"Disaster Recovery & BCP",95:"Compliance, GRC & Frameworks",96:"Week 13 Review",
-  97:"🔥 Full Mock Exam 1",98:"🔥 Full Mock Exam 2",99:"🔥 Full Mock Exam 3",100:"🏆 COMPTIA SECURITY+ EXAM DAY"
-};
-
-const MILESTONES = [
-  {at:1,emoji:"🚀",title:"Journey Begins!",msg:"Day 1 done. You've started what most people only talk about."},
-  {at:10,emoji:"💪",title:"10 Days Strong!",msg:"You're in the top 10% just by showing up consistently."},
-  {at:25,emoji:"⚡",title:"Quarter Way There!",msg:"25 days! You've finished most of Cloud Fundamentals."},
-  {at:30,emoji:"🎓",title:"Phase 1 Complete!",msg:"Cloud Fundamentals done. AWS CCP prep starts now!"},
-  {at:50,emoji:"🔥",title:"Halfway Milestone!",msg:"50 days done. You're a different person than Day 1 you."},
-  {at:60,emoji:"🌩️",title:"Phase 2 Complete!",msg:"Deep dive done. You know how to attack and defend cloud."},
-  {at:63,emoji:"🎯",title:"AWS CCP Exam Day!",msg:"This is what 63 days of work has been building toward. Go get it!"},
-  {at:75,emoji:"🌉",title:"Bridge Phase Done!",msg:"AWS certified. Security+ is next. The hardest part is behind you."},
-  {at:90,emoji:"🏃",title:"Final Stretch!",msg:"10 days left. Everything is in reach now."},
-  {at:100,emoji:"🏆",title:"100 DAYS COMPLETE!",msg:"You did it. CompTIA Security+ certified. Career changed."},
-];
-
-const RESOURCES = [
-  {title:"PHASE 1 & 2 — Cloud Fundamentals + Security",color:"#60a5fa",items:[
-    {name:"AWS Skill Builder",url:"https://skillbuilder.aws",what:"Cloud Practitioner Essentials (official course)",cost:"free",stars:5,tip:"Start here. Best quality official content."},
-    {name:"TryHackMe — Cloud Path",url:"https://tryhackme.com/path/outline/cloud",what:"Hands-on AWS, cloud security, IAM labs",cost:"free",stars:5,tip:"Best for your Kali background — practical labs"},
-    {name:"FreeCodeCamp AWS (YouTube)",url:"https://www.youtube.com/watch?v=ubCNZFQZZWg",what:"Full 14-hour AWS Beginner to Pro video",cost:"free",stars:4,tip:"Best single-video AWS intro on the internet"},
-    {name:"CloudGoat (Rhino Security)",url:"https://github.com/RhinoSecurityLabs/cloudgoat",what:"Deliberately vulnerable AWS environment",cost:"free",stars:5,tip:"Like DVWA but for AWS. Perfect for your level."},
-    {name:"HackTricks Cloud",url:"https://cloud.hacktricks.xyz",what:"Complete cloud attack techniques & reference",cost:"free",stars:4,tip:"Bookmark this. You'll use it every week."},
-    {name:"AWS Security Whitepapers",url:"https://aws.amazon.com/security/security-learning/",what:"Official AWS Security Best Practices PDFs",cost:"free",stars:4,tip:"Read: 'AWS Security Best Practices' PDF first"},
-    {name:"Pacu — AWS Exploitation",url:"https://github.com/RhinoSecurityLabs/pacu",what:"Post-exploitation framework for AWS",cost:"free",stars:4,tip:"Install during Week 7. Learn alongside CloudGoat."},
-    {name:"CloudSploit (Aqua Security)",url:"https://github.com/aquasecurity/cloudsploit",what:"Automated cloud misconfiguration scanner",cost:"free",stars:3,tip:"Run against your test AWS account to see real alerts"},
-  ]},
-  {title:"AWS CCP EXAM PREP",color:"#34d399",items:[
-    {name:"AWS Exam Readiness (Official)",url:"https://aws.amazon.com/certification/certification-prep/",what:"Official CCP exam prep & practice questions",cost:"free",stars:5,tip:"Do this in the last 2 weeks before exam"},
-    {name:"Tutorials Dojo — CCP Cheat Sheets",url:"https://tutorialsdojo.com/aws-cheat-sheets/",what:"Best cheat sheets for every AWS service",cost:"free",stars:5,tip:"Print these. Study them before sleep."},
-    {name:"ExamTopics AWS CCP",url:"https://www.examtopics.com/exams/amazon/aws-certified-cloud-practitioner/",what:"1000+ community practice questions",cost:"free",stars:4,tip:"Read every discussion answer — they're gold"},
-    {name:"Andrew Brown — CCP Full Course",url:"https://www.youtube.com/watch?v=3hLmDS179YE",what:"14-hour AWS CCP prep on FreeCodeCamp",cost:"free",stars:5,tip:"Best free CCP exam prep video. Watch at 1.25x."},
-    {name:"AWS Well-Architected Framework",url:"https://aws.amazon.com/architecture/well-architected/",what:"Official AWS architectural best practices",cost:"free",stars:4,tip:"Understand the 6 pillars — always in CCP exam"},
-  ]},
-  {title:"COMPTIA SECURITY+ PREP",color:"#f87171",items:[
-    {name:"Professor Messer SY0-701 (FREE)",url:"https://www.professormesser.com/security-plus/sy0-701/sy0-701-video/",what:"Complete free Security+ video course",cost:"free",stars:5,tip:"This alone is enough for Security+. Watch everything."},
-    {name:"Professor Messer Practice Tests",url:"https://www.professormesser.com/sy0-701-practice-exams/",what:"Free + paid practice questions",cost:"free+paid",stars:5,tip:"Free questions are sufficient to start. Very high quality."},
-    {name:"ExamTopics Security+ SY0-701",url:"https://www.examtopics.com/exams/comptia/sy0-701/",what:"1000+ community questions with discussion",cost:"free",stars:4,tip:"Read ALL discussions. Community catches wrong answers."},
-    {name:"Blue Team Labs Online",url:"https://blueteamlabs.online",what:"Practical SOC, forensics, defensive labs",cost:"free",stars:4,tip:"Do 2-3 labs/week during Phase 4."},
-    {name:"Jason Dion's Security+ (Udemy)",url:"https://www.udemy.com/course/securityplus/",what:"Top-rated Security+ course",cost:"paid ~₹500",stars:5,tip:"Best paid option. Wait for Udemy sale."},
-  ]},
-  {title:"BONUS — Career Building",color:"#a78bfa",items:[
-    {name:"GitHub — Portfolio",url:"https://github.com",what:"Upload CloudGoat writeups, scripts, lab notes",cost:"free",stars:5,tip:"1 repo/week minimum. Employers WILL check."},
-    {name:"LinkedIn",url:"https://linkedin.com",what:"Update profile with certs, share learnings",cost:"free",stars:5,tip:"Post 1 thing you learned each week."},
-    {name:"TCM Security YouTube",url:"https://www.youtube.com/@TCMSecurityAcademy",what:"Practical security and cloud security videos",cost:"free",stars:4,tip:"Follow Heath Adams. Great supplement."},
-    {name:"Hashnode",url:"https://hashnode.com",what:"Write about what you learn (1 article/week)",cost:"free",stars:4,tip:"Writing = best way to solidify knowledge."},
-    {name:"Cloud Security Alliance (CSA)",url:"https://cloudsecurityalliance.org/research/guidance",what:"CSA Cloud Security Guidance documents",cost:"free",stars:4,tip:"Download the CSA Cloud Controls Matrix — great for interviews"},
-  ]},
-];
-
-const CERTS = [
-  {name:"AWS Cloud Practitioner (CLF-C02)",cost:"$100",diff:"Easy-Medium",time:"30–45 days",job:"⭐⭐⭐⭐",cloud:"⭐⭐⭐⭐⭐",verdict:"✅ DO THIS FIRST",vtype:"do",url:"https://aws.amazon.com/certification/certified-cloud-practitioner/",reason:"Perfect entry point. Gives cloud vocabulary. 100% achievable in 60 days from zero."},
-  {name:"CompTIA Security+ SY0-701",cost:"$370",diff:"Medium",time:"45–60 days",job:"⭐⭐⭐⭐⭐",cloud:"⭐⭐⭐⭐",verdict:"✅ DO THIS SECOND",vtype:"do",url:"https://www.comptia.org/certifications/security",reason:"Most employer-recognized entry cert. Every job listing asks for it. Massive ROI."},
-  {name:"ISC² CC (Certified in Cybersecurity)",cost:"$199",diff:"Easy",time:"20–30 days",job:"⭐⭐⭐⭐",cloud:"⭐⭐⭐",verdict:"✅ OPTIONAL BACKUP",vtype:"do",url:"https://www.isc2.org/certifications/cc",reason:"Good if budget is tight. ISC² brand is globally trusted. Less cloud-specific."},
-  {name:"AWS Security Specialty",cost:"$300",diff:"Hard",time:"6+ months",job:"⭐⭐⭐⭐⭐",cloud:"⭐⭐⭐⭐⭐",verdict:"❌ NOT YET",vtype:"skip",url:"https://aws.amazon.com/certification/certified-security-specialty/",reason:"Requires 2+ years cloud experience. Year 2 goal."},
-  {name:"CEH (Certified Ethical Hacker)",cost:"$950+",diff:"Medium",time:"60–90 days",job:"⭐⭐⭐",cloud:"⭐⭐",verdict:"❌ SKIP IT",vtype:"skip",url:"https://www.eccouncil.org/train-certify/certified-ethical-hacker-ceh/",reason:"Overpriced, outdated, not respected by serious security employers. Very poor ROI."},
-  {name:"eJPT (eLearnSecurity)",cost:"$200",diff:"Easy-Med",time:"30 days",job:"⭐⭐⭐⭐",cloud:"⭐⭐",verdict:"⚡ AFTER PLACEMENT",vtype:"later",url:"https://elearnsecurity.com/product/ejpt-certification/",reason:"Great practical cert but more pentesting than cloud. Get this after landing a job."},
-  {name:"Google Cloud ACE",cost:"$200",diff:"Medium",time:"45–60 days",job:"⭐⭐⭐",cloud:"⭐⭐⭐⭐",verdict:"⚡ ALTERNATIVE",vtype:"later",url:"https://cloud.google.com/learn/certification/cloud-engineer",reason:"If target company uses GCP. Otherwise AWS CCP has 3x the market coverage."},
-  {name:"Azure Fundamentals AZ-900",cost:"$165",diff:"Easy",time:"20–30 days",job:"⭐⭐⭐",cloud:"⭐⭐⭐",verdict:"⚡ BONUS IF TIME",vtype:"later",url:"https://learn.microsoft.com/en-us/certifications/azure-fundamentals/",reason:"Quick win if you have spare time. Great for Microsoft ecosystem companies."},
-];
-
-const CAREER_ROLES = [
-  {icon:"🔎",title:"Cloud Security Analyst",sal:"₹5–8 LPA",skills:"IAM, SIEM, Cloud Config Review, GuardDuty",helps:"Your direct target role after this roadmap",link:"https://www.linkedin.com/jobs/cloud-security-analyst-jobs/"},
-  {icon:"🖥️",title:"SOC Analyst (Cloud)",sal:"₹4–7 LPA",skills:"Threat Detection, AWS/Azure, Log Analysis",helps:"Security+ covers SOC skills deeply — high demand",link:"https://www.linkedin.com/jobs/soc-analyst-jobs/"},
-  {icon:"⚔️",title:"Junior Penetration Tester",sal:"₹4–8 LPA",skills:"Kali, Burp Suite, Cloud APIs, Recon",helps:"Your Kali skills + cloud knowledge = rare combo",link:"https://www.linkedin.com/jobs/junior-penetration-tester-jobs/"},
-  {icon:"🛡️",title:"Information Security Analyst",sal:"₹5–9 LPA",skills:"Risk Assessment, Compliance, Controls",helps:"Security+ GRC domain maps directly to this role",link:"https://www.linkedin.com/jobs/information-security-analyst-jobs/"},
-  {icon:"☁️",title:"Cloud Security Engineer",sal:"₹8–15 LPA (1–2yr exp)",skills:"Terraform, DevSecOps, IAM, CSPM Tools",helps:"This is your 2-year career goal. Build toward it.",link:"https://www.linkedin.com/jobs/cloud-security-engineer-jobs/"},
-  {icon:"🔬",title:"Security Consultant (Junior)",sal:"₹5–9 LPA",skills:"Risk Assessment, Audits, Client Reporting",helps:"Security+ + communication skills = consulting path",link:"https://www.linkedin.com/jobs/security-consultant-jobs/"},
-];
-
-const QUOTES = [
-  "Every expert was once a beginner. The only failure is not starting.",
-  "Your Kali skills + cloud knowledge = a rare combination employers pay for.",
-  "Security+ on a fresher resume is not common. Make it yours.",
-  "100 days is all it takes to completely change your career trajectory.",
-  "The AI boom runs on cloud. Cloud security is the foundation.",
-  "You don't need to know everything. You need to know more than the competition.",
-  "CloudGoat today. Cloud Security Engineer tomorrow.",
-];
-
-// ═══ STATE ═══
-const STORAGE_KEY = "cloudsec_v3";
-let state = {progress:{}, notes:{}, startDate:null, lastMilestone:0, theme:'dark', accent:'blue', density:'comfortable'};
-try {
-  const s = localStorage.getItem(STORAGE_KEY);
-  if(s) { const p=JSON.parse(s); state={...state,...p}; }
-} catch{}
-
-// Migrate old format
-try {
-  const old = localStorage.getItem("cloudsec_tracker_v2");
-  if(old && !Object.keys(state.progress).length) {
-    const o=JSON.parse(old); state.progress=o; save();
+  // Try decode from URL first (share link)
+  if (window.location.search.includes("p=")) {
+    decodeStateFromUrl();
+    showToast("Loaded shared progress!", "🔗", "#a78bfa");
   }
-} catch{}
 
-let currentFilter = "all";
-let currentPage = 0;
-const DAYS_PER_PAGE = 25;
-let charts = {};
+  // Apply saved preferences
+  document.documentElement.setAttribute("data-theme",   state.theme   || "dark");
+  document.documentElement.setAttribute("data-accent",  state.accent  || "blue");
+  document.documentElement.setAttribute("data-density", state.density || "comfortable");
 
-// ═══ PERSISTENCE ═══
-function save(){ try { localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); } catch{} }
+  document.getElementById("btn-dark").classList.toggle("active",        state.theme !== "light");
+  document.getElementById("btn-light").classList.toggle("active",       state.theme === "light");
+  document.getElementById("btn-comfortable").classList.toggle("active", state.density !== "compact");
+  document.getElementById("btn-compact").classList.toggle("active",     state.density === "compact");
+  document.querySelectorAll(".accent-dot").forEach(d =>
+    d.classList.toggle("active", d.dataset.a === (state.accent || "blue")));
 
-// ═══ THEME / ACCENT / DENSITY ═══
-function setTheme(t){
-  state.theme = t;
-  document.documentElement.setAttribute('data-theme', t);
-  document.getElementById('btn-dark').classList.toggle('active', t==='dark');
-  document.getElementById('btn-light').classList.toggle('active', t==='light');
-  save();
-  updateCharts();
-}
-
-function setAccent(a){
-  state.accent = a;
-  document.documentElement.setAttribute('data-accent', a);
-  document.querySelectorAll('.accent-dot').forEach(d=>d.classList.toggle('active', d.dataset.a===a));
-  save();
-}
-
-function setDensity(d){
-  state.density = d;
-  document.documentElement.setAttribute('data-density', d);
-  document.getElementById('btn-comfortable').classList.toggle('active', d==='comfortable');
-  document.getElementById('btn-compact').classList.toggle('active', d==='compact');
-  save();
-}
-
-// ═══ HELPERS ═══
-function getPhase(day){ return PHASES.find(p=>day>=p.days[0]&&day<=p.days[1])||PHASES[0]; }
-
-function calcStats(){
-  const done = Object.values(state.progress).filter(v=>v==="yes").length;
-  const missed = Object.values(state.progress).filter(v=>v==="no").length;
-  let streak=0;
-  for(let d=1;d<=100;d++){
-    if(state.progress[d]==="yes") streak++;
-    else break;
-  }
-  return {done,missed,streak,pct:done};
-}
-
-function phaseStats(){
-  return PHASES.map(p=>{
-    const days=Array.from({length:p.days[1]-p.days[0]+1},(_,i)=>i+p.days[0]);
-    const done=days.filter(d=>state.progress[d]==="yes").length;
-    const missed=days.filter(d=>state.progress[d]==="no").length;
-    return {...p,done,missed,total:days.length,pct:Math.round(done/days.length*100)};
-  });
-}
-
-function getNextDay(){
-  for(let d=1;d<=100;d++){ if(!state.progress[d]) return d; }
-  return null;
-}
-
-function getCalendarDay(){
-  if(!state.startDate) return null;
-  const start = new Date(state.startDate);
-  const now = new Date();
-  start.setHours(0,0,0,0); now.setHours(0,0,0,0);
-  const diff = Math.floor((now-start)/(1000*60*60*24))+1;
-  if(diff>=1 && diff<=100) return diff;
-  return null;
-}
-
-function setActive(el){
-  document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
-  el.classList.add('active');
-}
-
-// ═══ START DATE ═══
-function saveStartDate(){
-  const v = document.getElementById("start-date").value;
-  state.startDate = v || null;
-  save(); updateDeadlines(); renderDays();
-}
-
-function updateDeadlines(){
-  const disp = document.getElementById("deadline-display");
-  const badge = document.getElementById("hero-today-badge");
-  if(!state.startDate){
-    disp.innerHTML="Set a start date to see your exam deadlines →";
-    badge.innerHTML="📅 <strong>Set a start date below</strong>";
-    return;
-  }
-  const start = new Date(state.startDate);
-  const ccp = new Date(start); ccp.setDate(ccp.getDate()+62);
-  const sec = new Date(start); sec.setDate(sec.getDate()+99);
-  const fmt = d => d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
-  disp.innerHTML=`🎯 CCP: <strong>${fmt(ccp)}</strong> &nbsp;·&nbsp; 🏆 Sec+: <strong>${fmt(sec)}</strong>`;
-
-  const calDay = getCalendarDay();
-  const nextDay = getNextDay();
-
-  if(new Date(state.startDate)>new Date()){
-    const daysLeft=Math.ceil((new Date(state.startDate)-new Date())/(1000*60*60*24));
-    badge.innerHTML=`📅 Journey starts in <strong>${daysLeft} day${daysLeft===1?'':'s'}</strong>`;
-  } else if(!nextDay){
-    badge.innerHTML=`🏆 <strong>All 100 days complete!</strong>`;
-  } else if(calDay){
-    const daysAhead = nextDay - calDay;
-    if(daysAhead < 0){
-      badge.innerHTML=`⚡ <strong>${Math.abs(daysAhead)} day${Math.abs(daysAhead)===1?'':'s'} ahead!</strong> Up next: Day ${nextDay} — ${TOPICS[nextDay]||""}`;
-    } else if(daysAhead > 0){
-      badge.innerHTML=`⏰ <strong>${daysAhead} day${daysAhead===1?'':'s'} behind.</strong> Catch up: Day ${nextDay}`;
-    } else {
-      badge.innerHTML=`📅 Today is <strong>Day ${nextDay}</strong> — ${TOPICS[nextDay]||""}`;
-    }
-  } else {
-    badge.innerHTML=`📍 Up next: <strong>Day ${nextDay}</strong> — ${TOPICS[nextDay]||""}`;
-  }
-}
-
-// ═══ RENDER ═══
-function render(){
-  updateStats(); updateCharts(); renderPhases(); renderDays(); updateDeadlines(); checkMilestones();
-}
-
-// Count-up animation
-function animateCount(el, target, suffix=''){
-  const start = parseInt(el.textContent)||0;
-  if(start===target) return;
-  const step = target>start ? 1 : -1;
-  const diff = Math.abs(target-start);
-  const delay = diff>10 ? 20 : diff>5 ? 30 : 50;
-  let cur=start;
-  const t=setInterval(()=>{
-    cur+=step;
-    el.textContent=cur+suffix;
-    if(cur===target) clearInterval(t);
-  },delay);
-}
-
-function updateStats(){
-  const {done,missed,streak,pct}=calcStats();
-  animateCount(document.getElementById("stat-done"), done);
-  animateCount(document.getElementById("stat-missed"), missed);
-  animateCount(document.getElementById("stat-streak"), streak);
-  animateCount(document.getElementById("stat-pct"), pct, '%');
-  document.getElementById("bar-done").style.width=done+"%";
-  document.getElementById("bar-missed").style.width=missed+"%";
-  document.getElementById("bar-streak").style.width=Math.min(streak,100)+"%";
-  document.getElementById("bar-pct").style.width=pct+"%";
-  document.getElementById("global-green").style.width=done+"%";
-  document.getElementById("global-red").style.width=missed+"%";
-  document.getElementById("global-red").style.left=done+"%";
-  document.getElementById("progress-text").textContent=done+" / 100 days";
-  document.getElementById("pie-pct-text").textContent=pct+"%";
-  // ring
-  const offset=201-(pct/100*201);
-  document.getElementById("mot-ring-fill").style.strokeDashoffset=offset;
-  document.getElementById("mot-ring-pct").textContent=pct+"%";
-  const nextDay=Math.min(done+missed+1,100);
-  document.getElementById("mot-next").textContent=nextDay;
-}
-
-function getChartColors(){
-  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
-  return {
-    grid: isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.06)',
-    text: isDark ? '#525252' : '#a1a1aa',
-  };
-}
-
-function updateCharts(){
-  if(!charts.pie) return;
-  const {done,missed}=calcStats();
-  const c=getChartColors();
-
-  charts.pie.data.datasets[0].data=[done,missed,Math.max(0,100-done-missed)];
-  charts.pie.update('none');
-
-  const weekDone=[],weekMissed=[];
-  for(let w=0;w<14;w++){
-    const s=w*7+1,e=Math.min(s+6,100);
-    const days=Array.from({length:e-s+1},(_,i)=>s+i);
-    weekDone.push(days.filter(d=>state.progress[d]==="yes").length);
-    weekMissed.push(days.filter(d=>state.progress[d]==="no").length);
-  }
-  charts.bar.data.datasets[0].data=weekDone;
-  charts.bar.data.datasets[1].data=weekMissed;
-  charts.bar.options.scales.x.grid.color=c.grid;
-  charts.bar.options.scales.y.grid.color=c.grid;
-  charts.bar.update('none');
-
-  let cum=0;
-  const lineData=Array.from({length:100},(_,i)=>{ if(state.progress[i+1]==="yes") cum++; return cum; });
-  charts.line.data.datasets[0].data=lineData;
-  charts.line.options.scales.x.grid.color=c.grid;
-  charts.line.options.scales.y.grid.color=c.grid;
-  charts.line.update('none');
-
-  charts.radar.data.datasets[0].data=phaseStats().map(p=>p.pct);
-  charts.radar.update('none');
-
-  const heatColors=Array.from({length:100},(_,i)=>{
-    if(state.progress[i+1]==="yes") return "#34d39988";
-    if(state.progress[i+1]==="no") return "#f8717188";
-    return c.grid;
-  });
-  charts.heat.data.datasets[0].backgroundColor=heatColors;
-  charts.heat.data.datasets[0].data=Array(100).fill(1);
-  charts.heat.update('none');
-}
-
-function renderPhases(){
-  const ps=phaseStats();
-  document.getElementById("phases-grid").innerHTML=ps.map(p=>`
-    <div class="phase-card" style="background:${p.bg};border-color:${p.border}">
-      <div class="phase-top">
-        <div class="phase-info">
-          <div class="phase-name" style="color:${p.color}">${p.name}</div>
-          <div class="phase-label-text">${p.label}</div>
-          <div class="phase-range">Days ${p.days[0]}–${p.days[1]} · ${p.total} days</div>
-        </div>
-        <div class="phase-pct-big" style="color:${p.color}">${p.pct}%</div>
-      </div>
-      <div class="phase-track"><div class="phase-fill" style="width:${p.pct}%;background:${p.color}"></div></div>
-      <div class="phase-stats-row">
-        <div class="phase-stat">
-          <div class="phase-stat-val" style="color:#34d399">${p.done}</div>
-          <div class="phase-stat-lbl">Done</div>
-        </div>
-        <div class="phase-stat">
-          <div class="phase-stat-val" style="color:#f87171">${p.missed}</div>
-          <div class="phase-stat-lbl">Missed</div>
-        </div>
-        <div class="phase-stat">
-          <div class="phase-stat-val" style="color:var(--muted)">${p.total-p.done-p.missed}</div>
-          <div class="phase-stat-lbl">Left</div>
-        </div>
-      </div>
-    </div>`).join("");
-}
-
-function renderDays(){
-  const grid=document.getElementById("days-grid");
-  const start=currentPage*DAYS_PER_PAGE+1;
-  const end=Math.min(start+DAYS_PER_PAGE-1,100);
-  let days=Array.from({length:end-start+1},(_,i)=>start+i);
-  const todayDay=getNextDay();
-
-  if(currentFilter==="done")    days=days.filter(d=>state.progress[d]==="yes");
-  else if(currentFilter==="missed")  days=days.filter(d=>state.progress[d]==="no");
-  else if(currentFilter==="pending") days=days.filter(d=>!state.progress[d]);
-
-  grid.innerHTML=days.map(day=>{
-    const phase=getPhase(day);
-    const st=state.progress[day];
-    const note=state.notes[day]||"";
-    const isToday=todayDay===day;
-    return `
-    <div class="day-card ${st==="yes"?"done":st==="no"?"missed":""} ${isToday?"today-card":""}" id="dc-${day}">
-      <div class="day-stripe" style="background:${phase.color}"></div>
-      <div class="day-meta">
-        <span class="day-num">DAY ${day}</span>
-        <span class="day-tag" style="background:${phase.color}18;color:${phase.color};border:1px solid ${phase.color}30">${phase.name}</span>
-      </div>
-      ${isToday?'<div class="day-today-badge">📍 UP NEXT</div>':''}
-      <div class="day-topic">${TOPICS[day]}</div>
-      <textarea class="day-note-area" placeholder="Notes..."
-        onchange="saveNote(${day},this.value)"
-        onblur="saveNote(${day},this.value)">${escapeHtml(note)}</textarea>
-      <div class="day-btns">
-        <button class="day-btn ${st==="yes"?"yes-active":""}" onclick="markDay(${day},'yes')" title="Mark Done">✅</button>
-        <button class="day-btn ${st==="no"?"no-active":""}" onclick="markDay(${day},'no')" title="Mark Missed">❌</button>
-      </div>
-    </div>`;
-  }).join("");
-}
-
-function escapeHtml(str){ return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-
-function renderPageBtns(){
-  const total=Math.ceil(100/DAYS_PER_PAGE);
-  document.getElementById("page-btns").innerHTML=Array.from({length:total},(_,i)=>
-    `<button class="page-btn ${i===currentPage?"active":""}" onclick="setPage(${i})">P${i+1}</button>`
-  ).join("");
-}
-
-function renderResources(){
-  document.getElementById("resources-container").innerHTML=RESOURCES.map(sec=>`
-    <div class="res-block">
-      <div class="res-section-title" style="background:${sec.color}12;color:${sec.color};border:1px solid ${sec.color}28;border-bottom:none">${sec.title}</div>
-      <table class="res-table">
-        <thead><tr><th>#</th><th>Resource</th><th>What</th><th>Cost</th><th>★</th><th>Tip</th></tr></thead>
-        <tbody>${sec.items.map((r,i)=>`
-          <tr>
-            <td style="color:var(--muted);font-size:9px">${i+1}</td>
-            <td><a class="res-link" href="${r.url}" target="_blank" rel="noopener">${r.name}</a></td>
-            <td style="color:var(--text2)">${r.what}</td>
-            <td>${getBadge(r.cost)}</td>
-            <td><span class="stars">${"★".repeat(r.stars)}${"☆".repeat(5-r.stars)}</span></td>
-            <td style="color:var(--muted);font-style:italic">${r.tip}</td>
-          </tr>`).join("")}
-        </tbody>
-      </table>
-    </div>`).join("");
-}
-
-function getBadge(cost){
-  if(cost==="free") return '<span class="res-badge badge-free">FREE</span>';
-  if(cost.includes("trial")) return '<span class="res-badge badge-trial">TRIAL</span>';
-  if(cost==="free+paid") return '<span class="res-badge badge-free">FREE</span><span class="res-badge badge-paid">+PAID</span>';
-  return `<span class="res-badge badge-paid">${cost.toUpperCase()}</span>`;
-}
-
-function renderCerts(){
-  document.getElementById("cert-tbody").innerHTML=CERTS.map(c=>`
-    <tr>
-      <td style="font-weight:600">${c.name}</td>
-      <td style="color:var(--amber)">${c.cost}</td>
-      <td style="color:var(--text2)">${c.diff}</td>
-      <td style="color:var(--text2)">${c.time}</td>
-      <td>${c.job}</td><td>${c.cloud}</td>
-      <td class="${c.vtype==="do"?"verdict-do":c.vtype==="skip"?"verdict-skip":"verdict-later"}">${c.verdict}</td>
-      <td><a href="${c.url}" target="_blank" rel="noopener" class="res-link" style="font-size:9px">Official ↗</a></td>
-    </tr>
-    <tr>
-      <td colspan="8" style="color:var(--muted);font-size:9px;padding:4px 16px 12px;font-style:italic;border-bottom:1px solid var(--border)">💡 ${c.reason}</td>
-    </tr>`).join("");
-}
-
-function renderCareer(){
-  document.getElementById("career-grid").innerHTML=CAREER_ROLES.map(r=>`
-    <div class="career-card">
-      <div class="career-icon">${r.icon}</div>
-      <div class="career-title">${r.title}</div>
-      <div class="career-sal">${r.sal}</div>
-      <div class="career-skills"><strong style="font-size:9px;letter-spacing:.5px;color:var(--muted);text-transform:uppercase">Skills:</strong><br>${r.skills}</div>
-      <div class="career-helps">${r.helps}</div>
-      <a href="${r.link}" target="_blank" rel="noopener" class="career-link">View Jobs ↗</a>
-    </div>`).join("");
-}
-
-// ═══ MILESTONES ═══
-function checkMilestones(){
-  const {done}=calcStats();
-  const milestone=MILESTONES.filter(m=>m.at<=done).pop();
-  if(!milestone || milestone.at<=state.lastMilestone) return;
-  state.lastMilestone=milestone.at; save();
-  showMilestone(milestone);
-}
-
-function showMilestone(m){
-  document.getElementById("milestone-emoji").textContent=m.emoji;
-  document.getElementById("milestone-title").textContent=m.title;
-  document.getElementById("milestone-msg").textContent=m.msg;
-  document.getElementById("milestone-banner").classList.add("show");
-  if(m.at>=50) launchConfetti();
-  setTimeout(()=>document.getElementById("milestone-banner").classList.remove("show"),8000);
-}
-
-// ═══ CONFETTI ═══
-function launchConfetti(){
-  const canvas=document.getElementById("confetti-canvas");
-  const ctx=canvas.getContext("2d");
-  canvas.width=window.innerWidth; canvas.height=window.innerHeight; canvas.style.display="block";
-  const pieces=Array.from({length:100},()=>({
-    x:Math.random()*canvas.width, y:-20,
-    w:Math.random()*10+3, h:Math.random()*5+2,
-    r:Math.random()*Math.PI*2,
-    vx:(Math.random()-.5)*4, vy:Math.random()*4+2, vr:(Math.random()-.5)*.2,
-    color:["#60a5fa","#34d399","#fbbf24","#f87171","#a78bfa"][Math.floor(Math.random()*5)],
-    opacity:1
-  }));
-  let frame=0;
-  function tick(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    pieces.forEach(p=>{
-      p.x+=p.vx; p.y+=p.vy; p.r+=p.vr;
-      if(frame>120) p.opacity=Math.max(0,p.opacity-.012);
-      ctx.save(); ctx.globalAlpha=p.opacity; ctx.translate(p.x,p.y); ctx.rotate(p.r);
-      ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
-    });
-    frame++;
-    if(frame<250 && pieces.some(p=>p.opacity>0)) requestAnimationFrame(tick);
-    else { ctx.clearRect(0,0,canvas.width,canvas.height); canvas.style.display="none"; }
-  }
-  requestAnimationFrame(tick);
-}
-
-// ═══ INTERACTIONS ═══
-function markDay(day,val){
-  const prev=state.progress[day];
-  if(prev===val) delete state.progress[day];
-  else state.progress[day]=val;
-  save(); render();
-  if(val==="yes"&&prev!=="yes") showToast(`Day ${day} done! Keep going 🎉`,"✅","#34d399");
-}
-
-function saveNote(day,val){
-  if(val.trim()) state.notes[day]=val.trim(); else delete state.notes[day]; save();
-}
-
-function setFilter(f,el){
-  currentFilter=f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active'); renderDays();
-}
-
-function setPage(p){ currentPage=p; renderDays(); renderPageBtns(); }
-
-// ═══ CHART INIT ═══
-function initCharts(){
-  const c = getChartColors();
-  Chart.defaults.color = c.text;
-  Chart.defaults.font.family = "'DM Mono', monospace";
-
-  charts.pie=new Chart(document.getElementById("pieChart"),{
-    type:"doughnut",
-    data:{
-      labels:["Done ✅","Missed ❌","Remaining"],
-      datasets:[{data:[0,0,100],backgroundColor:["#34d399","#f87171","#222222"],borderWidth:0,hoverOffset:6}]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false, cutout:"70%",
-      plugins:{
-        legend:{position:"bottom",labels:{padding:12,usePointStyle:true,pointStyle:"circle",font:{size:10}}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed} days`}}
-      }
-    }
-  });
-
-  charts.bar=new Chart(document.getElementById("barChart"),{
-    type:"bar",
-    data:{
-      labels:Array.from({length:14},(_,i)=>"W"+(i+1)),
-      datasets:[
-        {label:"Done",data:Array(14).fill(0),backgroundColor:"rgba(52,211,153,.25)",borderColor:"#34d399",borderWidth:1,borderRadius:4},
-        {label:"Missed",data:Array(14).fill(0),backgroundColor:"rgba(248,113,113,.25)",borderColor:"#f87171",borderWidth:1,borderRadius:4}
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      scales:{
-        x:{grid:{color:c.grid},ticks:{font:{size:9}}},
-        y:{grid:{color:c.grid},ticks:{stepSize:1},beginAtZero:true}
-      },
-      plugins:{legend:{labels:{padding:12,font:{size:10}}}}
-    }
-  });
-
-  charts.line=new Chart(document.getElementById("lineChart"),{
-    type:"line",
-    data:{
-      labels:Array.from({length:100},(_,i)=>i+1),
-      datasets:[
-        {label:"Your Progress",data:Array(100).fill(0),borderColor:"#60a5fa",backgroundColor:"rgba(96,165,250,.06)",fill:true,tension:.35,pointRadius:0,borderWidth:2},
-        {label:"Ideal",data:Array.from({length:100},(_,i)=>i+1),borderColor:"#333",borderDash:[5,4],fill:false,tension:0,pointRadius:0,borderWidth:1.5}
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      scales:{
-        x:{grid:{color:c.grid},ticks:{maxTicksLimit:10,font:{size:9}}},
-        y:{grid:{color:c.grid},beginAtZero:true,max:100}
-      },
-      plugins:{legend:{labels:{padding:12,font:{size:10}}}}
-    }
-  });
-
-  charts.radar=new Chart(document.getElementById("radarChart"),{
-    type:"radar",
-    data:{
-      labels:PHASES.map(p=>`${p.name}`),
-      datasets:[{
-        label:"% Done",data:[0,0,0,0],
-        backgroundColor:"rgba(96,165,250,.1)",borderColor:"#60a5fa",
-        pointBackgroundColor:"#60a5fa",borderWidth:1.5,pointRadius:3
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      scales:{r:{
-        grid:{color:c.grid},
-        ticks:{color:c.text,stepSize:25,backdropColor:"transparent",font:{size:9}},
-        pointLabels:{color:c.text,font:{size:10}},
-        min:0,max:100
-      }},
-      plugins:{legend:{labels:{padding:12,font:{size:10}}}}
-    }
-  });
-
-  charts.heat=new Chart(document.getElementById("heatChart"),{
-    type:"bar",
-    data:{
-      labels:Array.from({length:100},(_,i)=>i+1),
-      datasets:[{
-        data:Array(100).fill(1),
-        backgroundColor:Array(100).fill(c.grid),
-        borderWidth:0,borderRadius:2,
-        barPercentage:.9,categoryPercentage:.95
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      scales:{
-        x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{size:8}}},
-        y:{display:false,beginAtZero:true,max:1.2}
-      },
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{
-          title:ctx=>"Day "+ctx[0].label,
-          label:ctx=>{
-            const d=ctx.label;
-            if(state.progress[d]==="yes") return "✅ Done"+(state.notes[d]?" · "+state.notes[d].slice(0,30):"");
-            if(state.progress[d]==="no") return "❌ Missed";
-            return "⏳ Pending";
-          }
-        }}
-      }
-    }
-  });
-}
-
-// ═══ TOAST ═══
-let toastTimer=null;
-function showToast(msg,icon="✅",color="#34d399"){
-  const t=document.getElementById("toast");
-  document.getElementById("toast-msg").textContent=msg;
-  document.getElementById("toast-icon").textContent=icon;
-  t.style.borderColor=color+"44";
-  t.style.transform="translateY(0)"; t.style.opacity="1";
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>{ t.style.transform="translateY(80px)"; t.style.opacity="0"; },3000);
-}
-
-// ═══ EXPORT / IMPORT ═══
-function exportData(){
-  const {done,missed,streak}=calcStats();
-  const blob=new Blob([JSON.stringify({version:3,exported:new Date().toISOString(),summary:{done,missed,streak},state},null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a"); a.href=url; a.download=`cloudsec_${new Date().toISOString().slice(0,10)}.json`; a.click();
-  URL.revokeObjectURL(url);
-  showToast(`Exported! (${done} days done)`,"⬇️","#34d399");
-}
-
-function importData(e){
-  const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=evt=>{
-    try{
-      const parsed=JSON.parse(evt.target.result);
-      if(parsed.state&&parsed.state.progress){ state={...state,...parsed.state}; }
-      else if(parsed.progress){ state.progress=parsed.progress; }
-      else {
-        const keys=Object.keys(parsed);
-        if(keys.every(k=>!isNaN(k)&&(parsed[k]==="yes"||parsed[k]==="no"))){ state.progress=parsed; }
-        else { showToast("Invalid file","⚠️","#fbbf24"); return; }
-      }
-      save();
-      if(state.startDate) document.getElementById("start-date").value=state.startDate;
-      setTheme(state.theme||'dark'); setAccent(state.accent||'blue'); setDensity(state.density||'comfortable');
-      updateDeadlines(); render();
-      showToast(`Imported! ${Object.values(state.progress).filter(v=>v==="yes").length} days restored`,"⬆️","#60a5fa");
-    } catch { showToast("Could not read file","❌","#f87171"); }
-    e.target.value="";
-  };
-  reader.readAsText(file);
-}
-
-// ═══ MOBILE NAV ═══
-function toggleDrawer(){
-  const d=document.getElementById("mobile-drawer");
-  const h=document.getElementById("hamburger");
-  const open=d.classList.toggle("open");
-  h.classList.toggle("open",open);
-}
-
-function drawerNav(el,hash){
-  document.getElementById("mobile-drawer").classList.remove("open");
-  document.getElementById("hamburger").classList.remove("open");
-  document.querySelectorAll('.mobile-drawer .nav-link').forEach(n=>n.classList.remove('active'));
-  el.classList.add('active');
-  const bodyId=hash.replace('#','')+'-body';
-  const body=document.getElementById(bodyId);
-  if(body&&body.classList.contains('collapsed')) toggleSection(bodyId);
-  setTimeout(()=>{ const t=document.querySelector(hash); if(t) t.scrollIntoView({behavior:'smooth'}); },80);
-}
-
-function tabNav(el,hash){
-  document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  const bodyId=hash.replace('#','')+'-body';
-  const body=document.getElementById(bodyId);
-  if(body&&body.classList.contains('collapsed')) toggleSection(bodyId);
-  const t=document.querySelector(hash); if(t) t.scrollIntoView({behavior:'smooth'});
-}
-
-function toggleSection(bodyId){
-  const body=document.getElementById(bodyId);
-  const toggle=document.getElementById('toggle-'+bodyId);
-  if(!body) return;
-  if(window.innerWidth>600){ body.classList.remove('collapsed'); if(toggle) toggle.textContent='▾'; return; }
-  const collapsed=body.classList.toggle('collapsed');
-  if(toggle) toggle.textContent=collapsed?'▸':'▾';
-}
-
-document.addEventListener('click',e=>{
-  const drawer=document.getElementById('mobile-drawer');
-  const hbg=document.getElementById('hamburger');
-  if(drawer.classList.contains('open')&&!drawer.contains(e.target)&&!hbg.contains(e.target)){
-    drawer.classList.remove('open'); hbg.classList.remove('open');
-  }
-});
-
-window.addEventListener('resize',()=>{
-  if(window.innerWidth>600){
-    document.querySelectorAll('.section-body').forEach(b=>b.classList.remove('collapsed'));
-    document.querySelectorAll('.section-toggle').forEach(t=>t.textContent='▾');
-  }
-});
-
-// ═══ BOOT ═══
-window.addEventListener("DOMContentLoaded",()=>{
-  // Restore preferences
-  setTheme(state.theme||'dark');
-  setAccent(state.accent||'blue');
-  setDensity(state.density||'comfortable');
-
-  if(state.startDate) document.getElementById("start-date").value=state.startDate;
-  updateDeadlines();
-
-  document.getElementById("motivational-quote").textContent='"'+QUOTES[Math.floor(Date.now()/86400000)%QUOTES.length]+'"';
+  if (state.startDate) document.getElementById("start-date").value = state.startDate;
+  if (state.reminderTime) document.getElementById("reminder-time").value = state.reminderTime;
+  if (state.reminderEnabled) document.getElementById("reminder-toggle").checked = true;
 
   initCharts();
   renderResources();
   renderCerts();
   renderCareer();
-  renderPhases();
-  renderDays();
   renderPageBtns();
   render();
+  initSearch();
+  initKeyboardShortcuts();
+  initScrollSpy();
+  startReminderLoop();
 
-  // Scroll-based nav
-  const sections=["overview","charts","phases","tracker","resources","certs","career"];
-  const observer=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){
-        const id=e.target.id;
-        document.querySelectorAll('.nav-link').forEach(n=>{
-          n.classList.toggle('active',n.getAttribute('href')==='#'+id);
-        });
-      }
-    });
-  },{threshold:.15,rootMargin:"-60px 0px 0px 0px"});
-  sections.forEach(id=>{ const el=document.getElementById(id); if(el) observer.observe(el); });
+  // Stats grid — make it 3+3 if too many for 4-col on desktop
+  const statsGrid = document.querySelector(".stats-grid");
+  if (statsGrid) statsGrid.style.gridTemplateColumns = "repeat(3,1fr)";
 });
 </script>
 </body>
