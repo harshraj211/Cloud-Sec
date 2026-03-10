@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>☁️ Cloud Security — 100-Day Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#060d1a;--bg2:#0b1628;--bg3:#101f35;--bg4:#152540;
+  --border:#1a3050;--border2:#1e3d66;
+  --blue:#38bdf8;--green:#34d399;--amber:#fbbf24;--red:#f87171;--purple:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--faint:#334155;
+  --font-head:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-height:100vh;overflow-x:hidden}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* NOISE TEXTURE OVERLAY */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(6,13,26,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.nav-logo{font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--blue);letter-spacing:-0.5px}
+.nav-logo span{color:var(--muted);font-weight:400}
+.nav-links{display:flex;gap:4px}
+.nav-link{font-family:var(--font-mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:none;border:none;cursor:pointer;padding:6px 14px;border-radius:6px;transition:all .2s;text-decoration:none;display:block}
+.nav-link:hover,.nav-link.active{color:var(--blue);background:rgba(56,189,248,.1)}
+
+/* HERO */
+.hero{padding:48px 24px 32px;max-width:1100px;margin:0 auto;position:relative;z-index:1}
+.hero-tag{font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:12px;text-transform:uppercase}
+.hero-title{font-family:var(--font-head);font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.05;margin-bottom:16px}
+.hero-title .line1{color:var(--text)}
+.hero-title .line2{color:var(--blue)}
+.hero-sub{color:var(--muted);font-size:13px;max-width:520px;line-height:1.7}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:1100px;margin:0 auto 32px;padding:0 24px;position:relative;z-index:1}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;transition:transform .2s,border-color .2s;cursor:default}
+.stat-card:hover{transform:translateY(-3px);border-color:var(--border2)}
+.stat-icon{font-size:20px;margin-bottom:8px}
+.stat-val{font-family:var(--font-head);font-size:32px;font-weight:800;line-height:1}
+.stat-lbl{font-size:10px;letter-spacing:2px;color:var(--muted);margin-top:4px;text-transform:uppercase}
+.stat-bar{height:3px;border-radius:99px;margin-top:10px;background:var(--bg3)}
+.stat-bar-fill{height:100%;border-radius:99px;transition:width .8s ease}
+
+/* SECTION WRAPPER */
+.section{max-width:1100px;margin:0 auto 40px;padding:0 24px;position:relative;z-index:1}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.section-num{font-family:var(--font-head);font-size:11px;color:var(--muted);letter-spacing:2px;border:1px solid var(--border);padding:3px 10px;border-radius:99px}
+.section-title{font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--text)}
+.section-line{flex:1;height:1px;background:var(--border)}
+
+/* GLOBAL PROGRESS BAR */
+.progress-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 24px;}
+.progress-label{display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px}
+.progress-track{background:var(--bg);border-radius:99px;height:12px;overflow:hidden;position:relative}
+.progress-fill-green{position:absolute;height:100%;background:linear-gradient(90deg,#34d399,#38bdf8);border-radius:99px;transition:width .8s ease;left:0;top:0}
+.progress-fill-red{position:absolute;height:100%;background:#f8717166;border-radius:99px;transition:width .8s ease;top:0}
+.phase-dots{display:flex;gap:16px;margin-top:10px}
+.phase-dot{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.phase-dot-circle{width:10px;height:10px;border-radius:99px}
+
+/* CHARTS GRID */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:22px;transition:border-color .2s}
+.chart-card:hover{border-color:var(--border2)}
+.chart-card.full{grid-column:1/-1}
+.chart-title{font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:4px}
+.chart-sub{font-size:11px;color:var(--muted);margin-bottom:18px}
+.chart-canvas-wrap{position:relative}
+
+/* PHASE CARDS */
+.phases-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.phase-card{border-radius:16px;padding:22px;border:1px solid transparent;transition:transform .2s}
+.phase-card:hover{transform:translateY(-2px)}
+.phase-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.phase-name{font-family:var(--font-head);font-size:18px;font-weight:800}
+.phase-pct{font-family:var(--font-head);font-size:36px;font-weight:800}
+.phase-label{font-size:11px;color:var(--muted);margin-top:2px}
+.phase-days-range{font-size:10px;letter-spacing:1px;color:var(--muted)}
+.phase-track{background:rgba(0,0,0,.3);border-radius:99px;height:6px;overflow:hidden;margin-bottom:14px}
+.phase-track-fill{height:100%;border-radius:99px;transition:width .8s}
+.phase-mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.phase-mini-stat{background:rgba(0,0,0,.25);border-radius:10px;padding:10px;text-align:center}
+.phase-mini-val{font-family:var(--font-head);font-size:20px;font-weight:800}
+.phase-mini-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* DAY TRACKER */
+.tracker-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:gap}
+.tracker-filter{display:flex;gap:6px}
+.filter-btn{font-family:var(--font-mono);font-size:11px;letter-spacing:1px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);padding:6px 14px;border-radius:8px;cursor:pointer;transition:all .2s}
+.filter-btn.active,.filter-btn:hover{border-color:var(--blue);color:var(--blue);background:rgba(56,189,248,.08)}
+.page-btns{display:flex;gap:6px}
+.page-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);cursor:pointer;font-size:12px;transition:all .2s;font-family:var(--font-mono)}
+.page-btn.active,.page-btn:hover{border-color:var(--blue);color:var(--blue)}
+.days-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.day-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.day-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.day-card.done{background:#052e16;border-color:#16a34a55}
+.day-card.missed{background:#2d0a0a;border-color:#dc262655}
+.day-phase-stripe{position:absolute;top:0;left:0;width:3px;height:100%;border-radius:12px 0 0 12px}
+.day-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.day-num{font-size:11px;color:var(--muted);font-weight:500}
+.day-phase-tag{font-size:9px;padding:2px 7px;border-radius:99px;letter-spacing:.5px}
+.day-topic{font-size:11px;color:#cbd5e1;line-height:1.45;min-height:32px;margin-bottom:10px}
+.day-btns{display:flex;gap:6px}
+.day-btn{flex:1;padding:6px;border-radius:7px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;transition:all .2s}
+.day-btn:hover{transform:scale(1.05)}
+.day-btn.yes-active{background:#16a34a;border-color:#16a34a}
+.day-btn.no-active{background:#dc2626;border-color:#dc2626}
+
+/* RESOURCES */
+.resources-sections{display:flex;flex-direction:column;gap:24px}
+.res-section-title{font-family:var(--font-head);font-size:15px;font-weight:700;padding:10px 16px;border-radius:10px 10px 0 0;letter-spacing:.3px}
+.res-table{width:100%;border-collapse:collapse;background:var(--bg2);border-radius:0 0 12px 12px;overflow:hidden;border:1px solid var(--border)}
+.res-table th{font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3);text-transform:uppercase}
+.res-table td{padding:12px 14px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.res-table tr:last-child td{border-bottom:none}
+.res-table tr:hover td{background:var(--bg3)}
+.res-link{color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-weight:500;transition:opacity .2s}
+.res-link:hover{opacity:.75;text-decoration:underline}
+.res-link::after{content:'↗';font-size:10px;opacity:.6}
+.res-badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600}
+.badge-free{background:#052e16;color:#34d399;border:1px solid #16a34a44}
+.badge-paid{background:#2d1a00;color:#fbbf24;border:1px solid #d9770644}
+.badge-trial{background:#1e1a40;color:#a78bfa;border:1px solid #7c3aed44}
+.stars{color:#fbbf24;font-size:12px;letter-spacing:-1px}
+
+/* CERT COMPARISON */
+.cert-table{width:100%;border-collapse:collapse;background:var(--bg2);border-radius:14px;overflow:hidden;border:1px solid var(--border)}
+.cert-table th{font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--muted);padding:12px 16px;text-align:left;background:var(--bg3);border-bottom:1px solid var(--border);text-transform:uppercase}
+.cert-table td{padding:14px 16px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.cert-table tr:last-child td{border-bottom:none}
+.cert-table tr:hover td{background:var(--bg3)}
+.verdict-do{color:#34d399;font-weight:700}
+.verdict-skip{color:#f87171;font-weight:700}
+.verdict-later{color:#a78bfa;font-weight:700}
+
+/* CAREER SECTION */
+.career-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.career-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;transition:border-color .2s,transform .2s}
+.career-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.career-card-icon{font-size:28px;margin-bottom:10px}
+.career-card-title{font-family:var(--font-head);font-size:15px;font-weight:700;margin-bottom:6px}
+.career-card-body{font-size:12px;color:var(--muted);line-height:1.7}
+.career-card-sal{font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--green);margin-top:8px}
+
+/* MOTIVATION BANNER */
+.motivation{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border2);border-radius:16px;padding:28px 32px;text-align:center;margin:0 24px 40px;max-width:1052px;margin-left:auto;margin-right:auto;position:relative;z-index:1;overflow:hidden}
+.motivation::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(56,189,248,.06),transparent 60%)}
+.mot-quote{font-family:var(--font-head);font-size:clamp(14px,2.5vw,22px);font-weight:700;color:var(--text);margin-bottom:8px;position:relative}
+.mot-sub{font-size:12px;color:var(--muted);position:relative}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.animate-in{animation:fadeUp .5s ease forwards}
+.streak-pulse{animation:pulse 2s infinite}
+
+/* FOOTER */
+footer{text-align:center;padding:32px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);position:relative;z-index:1}
+
+/* ── MOBILE NAV HAMBURGER ── */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;border:none;background:none}
+.hamburger span{display:block;width:22px;height:2px;background:var(--muted);border-radius:99px;transition:all .3s}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+
+/* ── MOBILE DRAWER ── */
+.mobile-drawer{display:none;position:fixed;top:60px;left:0;right:0;background:rgba(6,13,26,.98);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);z-index:99;padding:12px 16px 16px;flex-direction:column;gap:4px}
+.mobile-drawer.open{display:flex}
+.mobile-drawer .nav-link{padding:12px 16px;font-size:12px;border-radius:8px;border:1px solid transparent}
+.mobile-drawer .nav-link:hover,.mobile-drawer .nav-link.active{border-color:var(--border2)}
+.mob-export-row{display:flex;gap:8px;margin-top:8px;padding-top:12px;border-top:1px solid var(--border)}
+.mob-export-row button,.mob-export-row label{flex:1;text-align:center;justify-content:center}
+
+/* ── BOTTOM TAB BAR (mobile only) ── */
+.bottom-tab-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(6,13,26,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 0 calc(8px + env(safe-area-inset-bottom));grid-template-columns:repeat(5,1fr)}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 2px;border:none;background:none;transition:all .2s}
+.tab-item .tab-icon{font-size:18px;line-height:1}
+.tab-item .tab-lbl{font-size:9px;color:var(--muted);letter-spacing:.5px;font-family:var(--font-mono);transition:color .2s}
+.tab-item.active .tab-lbl{color:var(--blue)}
+.tab-item.active .tab-icon{filter:drop-shadow(0 0 6px var(--blue))}
+
+/* ── SECTION COLLAPSE (mobile) ── */
+.section-header{cursor:pointer;user-select:none}
+.section-toggle{margin-left:auto;font-size:16px;color:var(--muted);transition:transform .3s;display:none}
+.section-body{transition:all .3s ease}
+
+/* ── RESPONSIVE TABLET ── */
+@media(max-width:900px){
+  .charts-grid{grid-template-columns:1fr}
+  .chart-card.full{grid-column:1}
+  .phases-grid{grid-template-columns:1fr 1fr}
+  .career-grid{grid-template-columns:1fr 1fr}
+  .cert-table th:nth-child(5),.cert-table td:nth-child(5),
+  .cert-table th:nth-child(6),.cert-table td:nth-child(6){display:none}
+}
+
+/* ── RESPONSIVE MOBILE ── */
+@media(max-width:600px){
+  /* Nav */
+  nav{padding:0 16px}
+  nav .nav-links{display:none}
+  .hamburger{display:flex}
+  nav > div:last-child > button,
+  nav > div:last-child > label{display:none}
+
+  /* Bottom tab bar */
+  .bottom-tab-bar{display:grid}
+
+  /* Body padding for bottom bar */
+  body{padding-bottom:72px}
+
+  /* Hero */
+  .hero{padding:28px 16px 20px}
+  .hero-title{font-size:clamp(26px,8vw,38px)}
+
+  /* Stats — 2 col */
+  .stats-grid{grid-template-columns:1fr 1fr;padding:0 16px;gap:10px;margin-bottom:16px}
+  .stat-card{padding:14px 16px}
+  .stat-val{font-size:26px}
+
+  /* Progress bar */
+  .progress-wrap{padding:16px}
+  .phase-dots{gap:8px 14px}
+
+  /* Sections */
+  .section{padding:0 16px;margin-bottom:24px}
+  .section-header{padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:0}
+  .section-toggle{display:block}
+  .section-body{overflow:hidden}
+  .section-body.collapsed{max-height:0!important;padding:0;margin:0}
+  .section-body:not(.collapsed){margin-top:16px}
+
+  /* Charts — 1 col */
+  .charts-grid{grid-template-columns:1fr}
+  .chart-card.full{grid-column:1}
+  .chart-card{padding:16px}
+
+  /* Phases — 1 col */
+  .phases-grid{grid-template-columns:1fr}
+  .phase-pct{font-size:28px}
+
+  /* Tracker */
+  .tracker-controls{flex-direction:column;gap:10px;align-items:flex-start}
+  .tracker-filter{flex-wrap:wrap;gap:6px}
+  .page-btns{align-self:flex-end}
+  .days-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .day-card{padding:10px 10px 10px 14px}
+  .day-topic{font-size:10px;min-height:28px}
+
+  /* Resources table — hide columns */
+  .res-table th:nth-child(3),.res-table td:nth-child(3),
+  .res-table th:nth-child(6),.res-table td:nth-child(6){display:none}
+  .res-table th,.res-table td{padding:10px 10px}
+
+  /* Cert table — hide less important cols */
+  .cert-table th:nth-child(3),.cert-table td:nth-child(3),
+  .cert-table th:nth-child(4),.cert-table td:nth-child(4),
+  .cert-table th:nth-child(5),.cert-table td:nth-child(5),
+  .cert-table th:nth-child(6),.cert-table td:nth-child(6){display:none}
+  .cert-table{font-size:11px}
+
+  /* Career — 1 col */
+  .career-grid{grid-template-columns:1fr}
+
+  /* Motivation */
+  .motivation{margin:0 16px 32px;padding:20px}
+
+  /* Footer */
+  footer{font-size:10px;padding:20px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">☁️ Cloud<span>Sec</span></div>
+  <div class="nav-links">
+    <a class="nav-link active" href="#overview" onclick="setActive(this)">Overview</a>
+    <a class="nav-link" href="#tracker" onclick="setActive(this)">Tracker</a>
+    <a class="nav-link" href="#charts" onclick="setActive(this)">Charts</a>
+    <a class="nav-link" href="#phases" onclick="setActive(this)">Phases</a>
+    <a class="nav-link" href="#resources" onclick="setActive(this)">Resources</a>
+    <a class="nav-link" href="#certs" onclick="setActive(this)">Certs</a>
+    <a class="nav-link" href="#career" onclick="setActive(this)">Career</a>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button onclick="exportData()" title="Export progress to JSON file" style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.3);padding:6px 13px;border-radius:7px;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(52,211,153,.22)'" onmouseout="this.style.background='rgba(52,211,153,.12)'">⬇ Export</button>
+    <label title="Import progress from JSON file" style="font-family:var(--font-mono);font-size:11px;letter-spacing:1px;background:rgba(56,189,248,.12);color:#38bdf8;border:1px solid rgba(56,189,248,.3);padding:6px 13px;border-radius:7px;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(56,189,248,.22)'" onmouseout="this.style.background='rgba(56,189,248,.12)'">⬆ Import<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
+    <button class="hamburger" id="hamburger" onclick="toggleDrawer()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-drawer" id="mobile-drawer">
+  <a class="nav-link active" href="#overview" onclick="drawerNav(this,'#overview')">📋 Overview</a>
+  <a class="nav-link" href="#tracker" onclick="drawerNav(this,'#tracker')">📅 Tracker</a>
+  <a class="nav-link" href="#charts" onclick="drawerNav(this,'#charts')">📊 Charts</a>
+  <a class="nav-link" href="#phases" onclick="drawerNav(this,'#phases')">🗂️ Phases</a>
+  <a class="nav-link" href="#resources" onclick="drawerNav(this,'#resources')">🆓 Resources</a>
+  <a class="nav-link" href="#certs" onclick="drawerNav(this,'#certs')">🏅 Certs</a>
+  <a class="nav-link" href="#career" onclick="drawerNav(this,'#career')">💼 Career</a>
+  <div class="mob-export-row">
+    <button onclick="exportData();toggleDrawer()" style="font-family:var(--font-mono);font-size:11px;background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.3);padding:8px 13px;border-radius:7px;cursor:pointer">⬇ Export</button>
+    <label style="font-family:var(--font-mono);font-size:11px;background:rgba(56,189,248,.12);color:#38bdf8;border:1px solid rgba(56,189,248,.3);padding:8px 13px;border-radius:7px;cursor:pointer;text-align:center">⬆ Import<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
+  </div>
+</div>
+
+<!-- BOTTOM TAB BAR (mobile) -->
+<div class="bottom-tab-bar" id="bottom-tab-bar">
+  <button class="tab-item active" onclick="tabNav(this,'#overview')"><span class="tab-icon">📋</span><span class="tab-lbl">Overview</span></button>
+  <button class="tab-item" onclick="tabNav(this,'#tracker')"><span class="tab-icon">📅</span><span class="tab-lbl">Tracker</span></button>
+  <button class="tab-item" onclick="tabNav(this,'#charts')"><span class="tab-icon">📊</span><span class="tab-lbl">Charts</span></button>
+  <button class="tab-item" onclick="tabNav(this,'#resources')"><span class="tab-icon">🆓</span><span class="tab-lbl">Resources</span></button>
+  <button class="tab-item" onclick="tabNav(this,'#career')"><span class="tab-icon">💼</span><span class="tab-lbl">Career</span></button>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" style="position:fixed;bottom:28px;right:28px;z-index:9999;background:#0b1628;border:1px solid var(--border2);border-radius:12px;padding:14px 20px;font-size:13px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none;display:flex;align-items:center;gap:10px;max-width:320px">
+  <span id="toast-icon" style="font-size:18px">✅</span>
+  <span id="toast-msg">Saved!</span>
+</div>
+
+<!-- HERO -->
+<div id="overview" class="hero animate-in">
+  <div class="hero-tag">📍 Cybersecurity Student · Intermediate · 100-Day Plan</div>
+  <h1 class="hero-title">
+    <div class="line1">Cloud Security</div>
+    <div class="line2">100-Day Roadmap</div>
+  </h1>
+  <p class="hero-sub">AWS Cloud Practitioner → CompTIA Security+. Mark each day done or missed. Watch your progress update live across all charts and phase trackers.</p>
+</div>
+
+<!-- STATS -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon">✅</div>
+    <div class="stat-val" id="stat-done" style="color:var(--green)">0</div>
+    <div class="stat-lbl">Days Completed</div>
+    <div class="stat-bar"><div class="stat-bar-fill" id="bar-done" style="background:var(--green);width:0%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">❌</div>
+    <div class="stat-val" id="stat-missed" style="color:var(--red)">0</div>
+    <div class="stat-lbl">Days Missed</div>
+    <div class="stat-bar"><div class="stat-bar-fill" id="bar-missed" style="background:var(--red);width:0%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon streak-pulse">🔥</div>
+    <div class="stat-val" id="stat-streak" style="color:var(--amber)">0</div>
+    <div class="stat-lbl">Day Streak</div>
+    <div class="stat-bar"><div class="stat-bar-fill" id="bar-streak" style="background:var(--amber);width:0%"></div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">📈</div>
+    <div class="stat-val" id="stat-pct" style="color:var(--blue)">0%</div>
+    <div class="stat-lbl">Overall Progress</div>
+    <div class="stat-bar"><div class="stat-bar-fill" id="bar-pct" style="background:var(--blue);width:0%"></div></div>
+  </div>
+</div>
+
+<!-- GLOBAL PROGRESS BAR -->
+<div style="max-width:1100px;margin:0 auto 32px;padding:0 24px;position:relative;z-index:1">
+  <div class="progress-wrap" style="padding:20px 24px;border-radius:14px;margin:0">
+    <div class="progress-label">
+      <span style="color:var(--muted);font-size:12px;letter-spacing:1px">JOURNEY PROGRESS</span>
+      <span id="progress-text" style="color:var(--blue);font-size:12px">0 / 100 days</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill-green" id="global-green" style="width:0%"></div>
+      <div class="progress-fill-red" id="global-red" style="width:0%;left:0%"></div>
+    </div>
+    <div class="phase-dots" style="flex-wrap:wrap;gap:12px 20px">
+      <div class="phase-dot"><div class="phase-dot-circle" style="background:#38bdf8"></div>Phase 1: Days 1–30</div>
+      <div class="phase-dot"><div class="phase-dot-circle" style="background:#34d399"></div>Phase 2: Days 31–60</div>
+      <div class="phase-dot"><div class="phase-dot-circle" style="background:#fbbf24"></div>Phase 3: Days 61–75</div>
+      <div class="phase-dot"><div class="phase-dot-circle" style="background:#f87171"></div>Phase 4: Days 76–100</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHARTS SECTION -->
+<div id="charts" class="section">
+  <div class="section-header" onclick="toggleSection('charts-body')">
+    <span class="section-num">01</span>
+    <h2 class="section-title">📊 Live Charts</h2>
+    <div class="section-line"></div>
+    <span class="section-toggle" id="toggle-charts-body">▾</span>
+  </div>
+  <div class="section-body" id="charts-body">
+  <div class="charts-grid">
+    <!-- Pie -->
+    <div class="chart-card">
+      <div class="chart-title">Overall Breakdown</div>
+      <div class="chart-sub">Distribution of completed, missed, and remaining days</div>
+      <div class="chart-canvas-wrap" style="height:240px;position:relative">
+        <canvas id="pieChart"></canvas>
+        <div id="pie-center" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+          <div style="font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--green)" id="pie-pct-text">0%</div>
+          <div style="font-size:10px;color:var(--muted)">Done</div>
+        </div>
+      </div>
+    </div>
+    <!-- Weekly Bar -->
+    <div class="chart-card">
+      <div class="chart-title">Weekly Performance</div>
+      <div class="chart-sub">Days completed vs missed per week (14 weeks)</div>
+      <div style="height:240px"><canvas id="barChart"></canvas></div>
+    </div>
+    <!-- Cumulative Line -->
+    <div class="chart-card full">
+      <div class="chart-title">Cumulative Progress vs Ideal Target</div>
+      <div class="chart-sub">Blue line = your actual progress · Dashed = ideal 1 day/day pace</div>
+      <div style="height:220px"><canvas id="lineChart"></canvas></div>
+    </div>
+    <!-- Phase Radar -->
+    <div class="chart-card">
+      <div class="chart-title">Phase Completion Radar</div>
+      <div class="chart-sub">How far you've progressed in each phase</div>
+      <div style="height:240px"><canvas id="radarChart"></canvas></div>
+    </div>
+    <!-- Heatmap-style bar -->
+    <div class="chart-card">
+      <div class="chart-title">Daily Activity Heatmap</div>
+      <div class="chart-sub">Each bar = one day · Green = done · Red = missed · Grey = pending</div>
+      <div style="height:240px"><canvas id="heatChart"></canvas></div>
+    </div>
+  </div>
+  </div><!-- /section-body charts -->
+</div>
+
+<!-- PHASES SECTION -->
+<div id="phases" class="section">
+  <div class="section-header" onclick="toggleSection('phases-body')">
+    <span class="section-num">02</span>
+    <h2 class="section-title">🗂️ Phase Breakdown</h2>
+    <div class="section-line"></div>
+    <span class="section-toggle" id="toggle-phases-body">▾</span>
+  </div>
+  <div class="section-body" id="phases-body">
+    <div class="phases-grid" id="phases-grid"></div>
+  </div>
+</div>
+
+<!-- DAY TRACKER -->
+<div id="tracker" class="section">
+  <div class="section-header" onclick="toggleSection('tracker-body')">
+    <span class="section-num">03</span>
+    <h2 class="section-title">📅 Daily Tracker</h2>
+    <div class="section-line"></div>
+    <span class="section-toggle" id="toggle-tracker-body">▾</span>
+  </div>
+  <div class="section-body" id="tracker-body">
+    <div class="tracker-controls">
+      <div class="tracker-filter">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All Days</button>
+        <button class="filter-btn" onclick="setFilter('done',this)">✅ Done</button>
+        <button class="filter-btn" onclick="setFilter('missed',this)">❌ Missed</button>
+        <button class="filter-btn" onclick="setFilter('pending',this)">⏳ Pending</button>
+      </div>
+      <div class="page-btns" id="page-btns"></div>
+    </div>
+    <div class="days-grid" id="days-grid"></div>
+  </div>
+</div>
+
+<!-- RESOURCES SECTION -->
+<div id="resources" class="section">
+  <div class="section-header" onclick="toggleSection('resources-body')">
+    <span class="section-num">04</span>
+    <h2 class="section-title">🆓 Free Resources</h2>
+    <div class="section-line"></div>
+    <span class="section-toggle" id="toggle-resources-body">▾</span>
+  </div>
+  <div class="section-body" id="resources-body">
+    <div class="resources-sections" id="resources-container"></div>
+  </div>
+</div>
+
+<!-- CERT COMPARISON -->
+<div id="certs" class="section">
+  <div class="section-header" onclick="toggleSection('certs-body')">
+    <span class="section-num">05</span>
+    <h2 class="section-title">🏅 Certification Comparison</h2>
+    <div class="section-line"></div>
+    <span class="section-toggle" id="toggle-certs-body">▾</span>
+  </div>
+  <div class="section-body" id="certs-body">
+    <div style="overflow-x:auto">
+      <table class="cert-table" id="cert-table">
+        <thead>
+          <tr>
+            <th>Certification</th>
+            <th>Cost (USD)</th>
+            <th>Difficulty</th>
+            <th>Prep Time</th>
+            <th>Job Impact</th>
+            <th>Cloud Relevance</th>
+            <th>Verdict</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+        <tbody id="cert-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CAREER SECTION -->
+<div id="career" class="section">
+  <div class="section-header" onclick="toggleSection('career-body')">
+    <span class="section-num">06</span>
+    <h2 class="section-title">💼 Career Outcomes</h2>
+    <div class="section-line"></div>
+    <span class="section-toggle" id="toggle-career-body">▾</span>
+  </div>
+  <div class="section-body" id="career-body">
+    <div class="career-grid" id="career-grid"></div>
+  </div>
+</div>
+
+<!-- MOTIVATION -->
+<div class="motivation">
+  <div class="mot-quote" id="motivational-quote">"Every expert was once a beginner. Start today."</div>
+  <div class="mot-sub" id="motivational-sub">Keep going. Day <span id="mot-next">1</span> is waiting.</div>
+</div>
+
+<footer>Built for a Cybersecurity Student · 100-Day Cloud Security Journey · AWS CCP → CompTIA Security+ · All data saved locally in your browser</footer>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const PHASES = [
+  {name:"Phase 1",label:"Cloud Fundamentals",days:[1,30],color:"#38bdf8",bg:"rgba(56,189,248,0.08)",border:"rgba(56,189,248,0.25)",light:"#0c2a3e"},
+  {name:"Phase 2",label:"Cloud Security Deep Dive",days:[31,60],color:"#34d399",bg:"rgba(52,211,153,0.08)",border:"rgba(52,211,153,0.25)",light:"#052e1a"},
+  {name:"Phase 3",label:"AWS CCP Exam + Bridge",days:[61,75],color:"#fbbf24",bg:"rgba(251,191,36,0.08)",border:"rgba(251,191,36,0.25)",light:"#2d1a00"},
+  {name:"Phase 4",label:"Security+ Intensive",days:[76,100],color:"#f87171",bg:"rgba(248,113,113,0.08)",border:"rgba(248,113,113,0.25)",light:"#2d0a0a"},
+];
+
+const TOPICS={
+  1:"Cloud Basics & AWS Account Setup",2:"AWS Regions, AZs & Edge Locations",3:"Core AWS Services Overview",4:"AWS Free Tier Hands-on Lab",5:"EC2 Introduction & Launch",6:"S3 Buckets — Create & Configure",7:"Week 1 Review & Quiz",
+  8:"IAM Users, Groups & Permissions",9:"IAM Policies (JSON deep dive)",10:"IAM Roles & Trust Policies",11:"MFA Setup & Best Practices",12:"Least Privilege Principle",13:"IAM Best Practices Checklist",14:"Week 2 Review & Mock IAM Scenarios",
+  15:"VPC Concepts & Architecture",16:"Subnets, Route Tables & Gateways",17:"Security Groups (Stateful)",18:"Network ACLs (Stateless)",19:"VPC Peering & Endpoints",20:"Internet & NAT Gateway",21:"Week 3 Review — Build a VPC",
+  22:"S3 Security & Bucket Policies",23:"S3 Encryption & Versioning",24:"EC2 Deep Dive (AMI, Types)",25:"EBS, EFS & Storage Types",26:"RDS & Database Security",27:"AWS Lambda & Serverless",28:"CloudFormation Basics",29:"AWS Billing, Cost & Budgets",30:"Phase 1 Complete Review + Mock",
+  31:"Cloud Threat Landscape Overview",32:"OWASP Cloud Security Top 10",33:"Shared Responsibility Model",34:"Data Classification in Cloud",35:"Cloud Attack Vectors & TTPs",36:"Threat Modeling for Cloud Apps",37:"Week 5 Review",
+  38:"AWS CloudTrail Setup & Analysis",39:"CloudWatch Alarms & Dashboards",40:"AWS GuardDuty Configuration",41:"AWS Config & Compliance",42:"AWS Security Hub Overview",43:"SIEM Basics & Log Analysis",44:"Week 6 Review",
+  45:"S3 Misconfiguration Attack Lab",46:"IAM Privilege Escalation Paths",47:"CloudGoat Scenario 1",48:"CloudGoat Scenario 2",49:"Pacu AWS Exploitation Framework",50:"HackTricks Cloud Reference",51:"Week 7 Review",
+  52:"AWS CCP Mock Exam 1",53:"Mock 1 Review & Gap Analysis",54:"AWS CCP Mock Exam 2",55:"Weak Area Deep Dive",56:"AWS CCP Mock Exam 3",57:"Final Service Review",58:"Exam Strategy & Time Management",59:"Rest, Light Revision Only",60:"Phase 2 Complete Review",
+  61:"CCP Final Cram — Cloud Concepts",62:"CCP Final Cram — Security Domain",63:"🎯 AWS CCP EXAM DAY",64:"Post-Exam Review & Reflection",65:"Security+ Overview & Domains",66:"Domain Mapping to Your Background",67:"Week 9 Review & Planning",
+  68:"Security+ Study Schedule",69:"Prof Messer SY0-701 — Threats",70:"Prof Messer — Architecture",71:"Prof Messer — Implementation",72:"Practice Questions Set 1",73:"Practice Questions Set 2",74:"Domain Gap Analysis",75:"Phase 3 Review",
+  76:"Threats Domain — Malware Types",77:"Social Engineering Techniques",78:"Application & Network Attacks",79:"Vulnerability Scanning Methods",80:"Penetration Testing Concepts",81:"Risk Management Basics",82:"Week 11 Review",
+  83:"Network Security Concepts",84:"Zero Trust Architecture",85:"Cryptography Fundamentals",86:"PKI, Certs & Digital Signatures",87:"Security Protocols (TLS, SSH)",88:"Cloud Security Architecture",89:"Week 12 Review",
+  90:"Incident Response Process",91:"Digital Forensics Basics",92:"SIEM & Log Analysis Lab",93:"Blue Team Labs Online",94:"Disaster Recovery & BCP",95:"Compliance, GRC & Frameworks",96:"Week 13 Review",
+  97:"🔥 Full Mock Exam 1",98:"🔥 Full Mock Exam 2",99:"🔥 Full Mock Exam 3",100:"🏆 COMPTIA SECURITY+ EXAM DAY"
+};
+
+const RESOURCES = [
+  {
+    title:"PHASE 1 & 2 — Cloud Fundamentals + Cloud Security",
+    color:"#38bdf8",
+    items:[
+      {name:"AWS Skill Builder",url:"https://skillbuilder.aws",what:"Cloud Practitioner Essentials (official course)",cost:"free",stars:5,tip:"Start here. Best quality official content."},
+      {name:"TryHackMe — Cloud Path",url:"https://tryhackme.com/path/outline/cloud",what:"Hands-on AWS, cloud security, IAM labs",cost:"free",stars:5,tip:"Best for your Kali background — practical labs"},
+      {name:"FreeCodeCamp AWS Course (YouTube)",url:"https://www.youtube.com/watch?v=ubCNZFQZZWg",what:"Full 14-hour AWS Beginner to Pro video",cost:"free",stars:4,tip:"Best single-video AWS intro on the internet"},
+      {name:"CloudGoat (Rhino Security Labs)",url:"https://github.com/RhinoSecurityLabs/cloudgoat",what:"Deliberately vulnerable AWS environment for attack practice",cost:"free",stars:5,tip:"Like DVWA but for AWS. Perfect for your skill level."},
+      {name:"HackTricks Cloud",url:"https://cloud.hacktricks.xyz",what:"Complete cloud attack techniques & reference",cost:"free",stars:4,tip:"Bookmark this. You'll use it every week."},
+      {name:"AWS Security Whitepapers",url:"https://aws.amazon.com/security/security-learning/?cards-top.sort-by=item.additionalFields.sortDate&cards-top.sort-order=desc",what:"Official AWS Security Best Practices PDFs",cost:"free",stars:4,tip:"Read: 'AWS Security Best Practices' PDF first"},
+      {name:"Pacu — AWS Exploitation Framework",url:"https://github.com/RhinoSecurityLabs/pacu",what:"Post-exploitation framework for AWS (like Metasploit)",cost:"free",stars:4,tip:"Install during Week 7. Learn alongside CloudGoat."},
+      {name:"CloudSploit (Aqua Security)",url:"https://github.com/aquasecurity/cloudsploit",what:"Automated cloud misconfiguration scanner",cost:"free",stars:3,tip:"Run against your test AWS account to see real alerts"},
+      {name:"SANS Cloud Curriculum",url:"https://www.sans.org/cyber-security-courses/?focus-area=cloud-security",what:"Free webinars and cloud security intro resources",cost:"free",stars:3,tip:"Watch free webinars on their YouTube channel"},
+    ]
+  },
+  {
+    title:"AWS CCP EXAM PREP",
+    color:"#34d399",
+    items:[
+      {name:"AWS Exam Readiness (Official)",url:"https://aws.amazon.com/certification/certification-prep/",what:"Official CCP exam prep & practice questions",cost:"free",stars:5,tip:"Do this in the last 2 weeks before exam"},
+      {name:"Tutorials Dojo — CCP Cheat Sheets",url:"https://tutorialsdojo.com/aws-cheat-sheets/",what:"Best cheat sheets for every AWS service",cost:"free",stars:5,tip:"Print these. Study them before sleep."},
+      {name:"ExamTopics AWS CCP",url:"https://www.examtopics.com/exams/amazon/aws-certified-cloud-practitioner/",what:"1000+ community practice questions with explanations",cost:"free",stars:4,tip:"Read every discussion answer — they're gold"},
+      {name:"Andrew Brown — CCP Full Course",url:"https://www.youtube.com/watch?v=3hLmDS179YE",what:"14-hour AWS CCP prep video on FreeCodeCamp channel",cost:"free",stars:5,tip:"Best free CCP exam prep video. Watch at 1.25x."},
+      {name:"AWS Well-Architected Framework",url:"https://aws.amazon.com/architecture/well-architected/",what:"Official AWS architectural best practices",cost:"free",stars:4,tip:"Understand the 6 pillars — always in CCP exam"},
+    ]
+  },
+  {
+    title:"COMPTIA SECURITY+ PREP",
+    color:"#f87171",
+    items:[
+      {name:"Professor Messer SY0-701 (FREE)",url:"https://www.professormesser.com/security-plus/sy0-701/sy0-701-video/sy0-701-comptia-security-plus-course/",what:"Complete free Security+ video course — ALL domains",cost:"free",stars:5,tip:"This alone is enough for Security+. Watch everything."},
+      {name:"Professor Messer Practice Tests",url:"https://www.professormesser.com/sy0-701-practice-exams/",what:"Free + paid practice questions",cost:"free+paid",stars:5,tip:"Free questions are sufficient to start. Very high quality."},
+      {name:"ExamTopics Security+ SY0-701",url:"https://www.examtopics.com/exams/comptia/sy0-701/",what:"1000+ community questions with detailed discussion",cost:"free",stars:4,tip:"Read ALL discussions. Community catches wrong official answers."},
+      {name:"Blue Team Labs Online",url:"https://blueteamlabs.online",what:"Practical SOC, forensics, and defensive security labs",cost:"free",stars:4,tip:"Do 2-3 labs/week during Phase 4. Hands-on SOC practice."},
+      {name:"Cybrary Security+ Course",url:"https://www.cybrary.it/course/comptia-security-plus",what:"Video course covering all Security+ domains",cost:"free tier",stars:3,tip:"Good supplement if you want another perspective."},
+      {name:"CompTIA CertMaster Learn (Trial)",url:"https://www.comptia.org/training/certmaster-learn/security",what:"Official CompTIA learning platform — free trial",cost:"trial",stars:4,tip:"Use the free trial strategically 1 week before exam"},
+      {name:"Jason Dion's Security+ (Udemy)",url:"https://www.udemy.com/course/securityplus/",what:"Top-rated Security+ course (₹500 on sale)",cost:"paid ~₹500",stars:5,tip:"Best paid option. Wait for Udemy sale — happens weekly."},
+    ]
+  },
+  {
+    title:"BONUS — Career Building (Do Alongside Everything)",
+    color:"#a78bfa",
+    items:[
+      {name:"GitHub — Build Your Portfolio",url:"https://github.com",what:"Upload CloudGoat writeups, scripts, lab notes",cost:"free",stars:5,tip:"1 repo/week minimum. Employers WILL check your GitHub."},
+      {name:"LinkedIn",url:"https://linkedin.com",what:"Update profile with certs, share learnings publicly",cost:"free",stars:5,tip:"Post 1 thing you learned each week. Visibility matters."},
+      {name:"TCM Security YouTube",url:"https://www.youtube.com/@TCMSecurityAcademy",what:"Practical security content, cloud security videos",cost:"free",stars:4,tip:"Follow Heath Adams. Great supplement channel."},
+      {name:"Medium / Hashnode",url:"https://hashnode.com",what:"Write about what you learn (1 article/week)",cost:"free",stars:4,tip:"Writing = best way to solidify knowledge. Also builds SEO profile."},
+      {name:"SANS Cyber Aces",url:"https://www.cyberaces.org",what:"Free cybersecurity fundamentals course",cost:"free",stars:3,tip:"Fill any knowledge gaps in networking or OS fundamentals"},
+      {name:"Cloud Security Alliance (CSA)",url:"https://cloudsecurityalliance.org/research/guidance",what:"CSA Cloud Security Guidance documents (free)",cost:"free",stars:4,tip:"Download the CSA Cloud Controls Matrix — good for interviews"},
+    ]
+  }
+];
+
+const CERTS = [
+  {name:"AWS Cloud Practitioner (CLF-C02)",cost:"$100",diff:"Easy-Medium",time:"30–45 days",job:"⭐⭐⭐⭐",cloud:"⭐⭐⭐⭐⭐",verdict:"✅ DO THIS FIRST",vtype:"do",url:"https://aws.amazon.com/certification/certified-cloud-practitioner/",reason:"Perfect entry point. Gives cloud vocabulary. 100% achievable from zero in 60 days."},
+  {name:"CompTIA Security+ SY0-701",cost:"$370",diff:"Medium",time:"45–60 days",job:"⭐⭐⭐⭐⭐",cloud:"⭐⭐⭐⭐",verdict:"✅ DO THIS SECOND",vtype:"do",url:"https://www.comptia.org/certifications/security",reason:"Most employer-recognized entry cert. Every job listing asks for it. Massive ROI."},
+  {name:"ISC² CC (Certified in Cybersecurity)",cost:"$199",diff:"Easy",time:"20–30 days",job:"⭐⭐⭐⭐",cloud:"⭐⭐⭐",verdict:"✅ OPTIONAL BACKUP",vtype:"do",url:"https://www.isc2.org/certifications/cc",reason:"Good if budget is tight. ISC² brand is globally trusted. Less cloud-specific."},
+  {name:"AWS Security Specialty",cost:"$300",diff:"Hard",time:"6+ months",job:"⭐⭐⭐⭐⭐",cloud:"⭐⭐⭐⭐⭐",verdict:"❌ NOT YET",vtype:"skip",url:"https://aws.amazon.com/certification/certified-security-specialty/",reason:"Requires 2+ years cloud experience. You will struggle without hands-on time. Year 2 goal."},
+  {name:"CEH (Certified Ethical Hacker)",cost:"$950+",diff:"Medium",time:"60–90 days",job:"⭐⭐⭐",cloud:"⭐⭐",verdict:"❌ SKIP IT",vtype:"skip",url:"https://www.eccouncil.org/train-certify/certified-ethical-hacker-ceh/",reason:"Overpriced, outdated, not respected by serious security employers. Very poor ROI."},
+  {name:"eJPT (eLearnSecurity)",cost:"$200",diff:"Easy-Medium",time:"30 days",job:"⭐⭐⭐⭐",cloud:"⭐⭐",verdict:"⚡ AFTER PLACEMENT",vtype:"later",url:"https://elearnsecurity.com/product/ejpt-certification/",reason:"Great practical cert but more pentesting than cloud security. Get this after landing a job."},
+  {name:"Google Cloud ACE",cost:"$200",diff:"Medium",time:"45–60 days",job:"⭐⭐⭐",cloud:"⭐⭐⭐⭐",verdict:"⚡ ALTERNATIVE",vtype:"later",url:"https://cloud.google.com/learn/certification/cloud-engineer",reason:"If your target company uses GCP. Otherwise AWS CCP has 3x the market coverage."},
+  {name:"Azure Fundamentals AZ-900",cost:"$165",diff:"Easy",time:"20–30 days",job:"⭐⭐⭐",cloud:"⭐⭐⭐",verdict:"⚡ BONUS IF TIME",vtype:"later",url:"https://learn.microsoft.com/en-us/certifications/azure-fundamentals/",reason:"Quick win if you have spare time. Great for Microsoft ecosystem companies."},
+];
+
+const CAREER_ROLES = [
+  {icon:"🔎",title:"Cloud Security Analyst",sal:"₹5–8 LPA",skills:"IAM, SIEM, Cloud Config Review, GuardDuty",helps:"Your direct target role after this roadmap",link:"https://www.linkedin.com/jobs/cloud-security-analyst-jobs/"},
+  {icon:"🖥️",title:"SOC Analyst (Cloud)",sal:"₹4–7 LPA",skills:"Threat Detection, AWS/Azure, Log Analysis",helps:"Security+ covers SOC skills deeply — high demand fresher role",link:"https://www.linkedin.com/jobs/soc-analyst-jobs/"},
+  {icon:"⚔️",title:"Junior Penetration Tester",sal:"₹4–8 LPA",skills:"Kali, Burp Suite, Cloud APIs, Recon",helps:"Your existing Kali skills + cloud knowledge = bonus differentiator",link:"https://www.linkedin.com/jobs/junior-penetration-tester-jobs/"},
+  {icon:"🛡️",title:"Information Security Analyst",sal:"₹5–9 LPA",skills:"Risk Assessment, Compliance, Security Controls",helps:"Security+ GRC domain maps directly to this role",link:"https://www.linkedin.com/jobs/information-security-analyst-jobs/"},
+  {icon:"☁️",title:"Cloud Security Engineer",sal:"₹8–15 LPA (1–2yr exp)",skills:"Terraform, DevSecOps, IAM, CSPM Tools",helps:"This is your 2-year career goal after entry. Build toward it.",link:"https://www.linkedin.com/jobs/cloud-security-engineer-jobs/"},
+  {icon:"🔬",title:"Security Consultant (Junior)",sal:"₹5–9 LPA",skills:"Risk Assessment, Audits, Client Reporting",helps:"Security+ + communication skills = consulting path",link:"https://www.linkedin.com/jobs/security-consultant-jobs/"},
+];
+
+const QUOTES = [
+  "Every expert was once a beginner. The only failure is not starting.",
+  "Your Kali skills + cloud knowledge = a rare combination employers will pay for.",
+  "Security+ on a fresher resume is not common. Make it yours.",
+  "100 days is all it takes to completely change your career trajectory.",
+  "The AI boom runs on cloud. Cloud security is not a trend — it's the foundation.",
+  "You don't need to know everything. You need to know more than the competition.",
+  "CloudGoat today. Cloud Security Engineer tomorrow. Keep going.",
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const STORAGE_KEY = "cloudsec_tracker_v2";
+let progress = {};
+try { const s=localStorage.getItem(STORAGE_KEY); if(s) progress=JSON.parse(s); } catch{}
+
+let currentFilter = "all";
+let currentPage = 0;
+const DAYS_PER_PAGE = 25;
+let charts = {};
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function save(){ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(progress));}catch{} }
+
+function getPhase(day){ return PHASES.find(p=>day>=p.days[0]&&day<=p.days[1])||PHASES[0]; }
+
+function calcStats(){
+  const done = Object.values(progress).filter(v=>v==="yes").length;
+  const missed = Object.values(progress).filter(v=>v==="no").length;
+  let streak=0;
+  for(let d=1;d<=100;d++){
+    if(progress[d]==="yes") streak++;
+    else break;
+  }
+  return {done,missed,streak,pct:done};
+}
+
+function phaseStats(){
+  return PHASES.map(p=>{
+    const days=Array.from({length:p.days[1]-p.days[0]+1},(_,i)=>i+p.days[0]);
+    const done=days.filter(d=>progress[d]==="yes").length;
+    const missed=days.filter(d=>progress[d]==="no").length;
+    return {...p,done,missed,total:days.length,pct:Math.round(done/(days.length)*100)};
+  });
+}
+
+function setActive(el){ document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active')); el.classList.add('active'); }
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+function updateStats(){
+  const {done,missed,streak,pct}=calcStats();
+  document.getElementById("stat-done").textContent=done;
+  document.getElementById("stat-missed").textContent=missed;
+  document.getElementById("stat-streak").textContent=streak;
+  document.getElementById("stat-pct").textContent=pct+"%";
+  document.getElementById("bar-done").style.width=(done)+"px";
+  document.getElementById("bar-done").style.width=(done)+"%";
+  document.getElementById("bar-missed").style.width=(missed)+"%";
+  document.getElementById("bar-streak").style.width=(streak)+"%";
+  document.getElementById("bar-pct").style.width=pct+"%";
+  document.getElementById("global-green").style.width=done+"%";
+  document.getElementById("global-red").style.width=missed+"%";
+  document.getElementById("global-red").style.left=done+"%";
+  document.getElementById("progress-text").textContent=done+" / 100 days";
+  document.getElementById("pie-pct-text").textContent=pct+"%";
+
+  // motivation
+  const q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById("motivational-quote").textContent='"'+q+'"';
+  const nextDay = Math.min(done+missed+1,100);
+  document.getElementById("mot-next").textContent=nextDay;
+}
+
+function updateCharts(){
+  const {done,missed}=calcStats();
+
+  // PIE
+  charts.pie.data.datasets[0].data=[done,missed,Math.max(0,100-done-missed)];
+  charts.pie.update();
+
+  // BAR (weekly)
+  const weekDone=[],weekMissed=[];
+  for(let w=0;w<14;w++){
+    const s=w*7+1,e=Math.min(s+6,100);
+    const days=Array.from({length:e-s+1},(_,i)=>s+i);
+    weekDone.push(days.filter(d=>progress[d]==="yes").length);
+    weekMissed.push(days.filter(d=>progress[d]==="no").length);
+  }
+  charts.bar.data.datasets[0].data=weekDone;
+  charts.bar.data.datasets[1].data=weekMissed;
+  charts.bar.update();
+
+  // LINE (cumulative)
+  let cum=0;
+  const lineData=Array.from({length:100},(_,i)=>{
+    if(progress[i+1]==="yes") cum++;
+    return cum;
+  });
+  charts.line.data.datasets[0].data=lineData;
+  charts.line.update();
+
+  // RADAR
+  const ps=phaseStats();
+  charts.radar.data.datasets[0].data=ps.map(p=>p.pct);
+  charts.radar.update();
+
+  // HEAT
+  const heatColors=Array.from({length:100},(_,i)=>{
+    const d=i+1;
+    if(progress[d]==="yes") return "#34d399";
+    if(progress[d]==="no") return "#f87171";
+    return "#1e3d66";
+  });
+  charts.heat.data.datasets[0].backgroundColor=heatColors;
+  charts.heat.data.datasets[0].data=Array(100).fill(1);
+  charts.heat.update();
+}
+
+function renderPhases(){
+  const ps=phaseStats();
+  document.getElementById("phases-grid").innerHTML=ps.map(p=>`
+    <div class="phase-card" style="background:${p.bg};border-color:${p.border}">
+      <div class="phase-card-head">
+        <div>
+          <div class="phase-name" style="color:${p.color}">${p.name}</div>
+          <div class="phase-label">${p.label}</div>
+          <div class="phase-days-range">Days ${p.days[0]}–${p.days[1]} · ${p.total} days total</div>
+        </div>
+        <div class="phase-pct" style="color:${p.color}">${p.pct}%</div>
+      </div>
+      <div class="phase-track"><div class="phase-track-fill" style="width:${p.pct}%;background:${p.color}"></div></div>
+      <div class="phase-mini-stats">
+        <div class="phase-mini-stat"><div class="phase-mini-val" style="color:#34d399">${p.done}</div><div class="phase-mini-lbl">Completed</div></div>
+        <div class="phase-mini-stat"><div class="phase-mini-val" style="color:#f87171">${p.missed}</div><div class="phase-mini-lbl">Missed</div></div>
+        <div class="phase-mini-stat"><div class="phase-mini-val" style="color:#64748b">${p.total-p.done-p.missed}</div><div class="phase-mini-lbl">Remaining</div></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderDays(){
+  const grid=document.getElementById("days-grid");
+  const start=currentPage*DAYS_PER_PAGE+1;
+  const end=Math.min(start+DAYS_PER_PAGE-1,100);
+  let days=Array.from({length:end-start+1},(_,i)=>start+i);
+
+  if(currentFilter==="done") days=days.filter(d=>progress[d]==="yes");
+  else if(currentFilter==="missed") days=days.filter(d=>progress[d]==="no");
+  else if(currentFilter==="pending") days=days.filter(d=>!progress[d]);
+
+  grid.innerHTML=days.map(day=>{
+    const phase=getPhase(day);
+    const st=progress[day];
+    return `
+    <div class="day-card ${st==="yes"?"done":st==="no"?"missed":""}" id="dc-${day}">
+      <div class="day-phase-stripe" style="background:${phase.color}"></div>
+      <div class="day-meta">
+        <span class="day-num">DAY ${day}</span>
+        <span class="day-phase-tag" style="background:${phase.color}22;color:${phase.color};border:1px solid ${phase.color}44">${phase.name}</span>
+      </div>
+      <div class="day-topic">${TOPICS[day]}</div>
+      <div class="day-btns">
+        <button class="day-btn ${st==="yes"?"yes-active":""}" onclick="markDay(${day},'yes')" title="Mark Done">✅</button>
+        <button class="day-btn ${st==="no"?"no-active":""}" onclick="markDay(${day},'no')" title="Mark Missed">❌</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderPageBtns(){
+  const total=Math.ceil(100/DAYS_PER_PAGE);
+  document.getElementById("page-btns").innerHTML=Array.from({length:total},(_,i)=>`
+    <button class="page-btn ${i===currentPage?"active":""}" onclick="setPage(${i})">P${i+1}</button>
+  `).join("");
+}
+
+function renderResources(){
+  const c=document.getElementById("resources-container");
+  c.innerHTML=RESOURCES.map(sec=>`
+    <div>
+      <div class="res-section-title" style="background:${sec.color}22;color:${sec.color};border:1px solid ${sec.color}44">${sec.title}</div>
+      <table class="res-table">
+        <thead><tr><th>#</th><th>Resource</th><th>What to Use It For</th><th>Cost</th><th>Rating</th><th>Pro Tip</th></tr></thead>
+        <tbody>
+          ${sec.items.map((r,i)=>`
+          <tr>
+            <td style="color:var(--muted);font-size:11px">${i+1}</td>
+            <td><a class="res-link" href="${r.url}" target="_blank" rel="noopener">${r.name}</a></td>
+            <td style="color:#94a3b8">${r.what}</td>
+            <td>${getBadge(r.cost)}</td>
+            <td><span class="stars">${"★".repeat(r.stars)}${"☆".repeat(5-r.stars)}</span></td>
+            <td style="color:var(--muted);font-size:11px;font-style:italic">${r.tip}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+  `).join("");
+}
+
+function getBadge(cost){
+  if(cost==="free") return '<span class="res-badge badge-free">FREE</span>';
+  if(cost.includes("trial")) return '<span class="res-badge badge-trial">TRIAL</span>';
+  if(cost==="free+paid") return '<span class="res-badge badge-free">FREE</span> <span class="res-badge badge-paid">+PAID</span>';
+  return `<span class="res-badge badge-paid">${cost.toUpperCase()}</span>`;
+}
+
+function renderCerts(){
+  document.getElementById("cert-tbody").innerHTML=CERTS.map(c=>`
+    <tr>
+      <td style="font-weight:600;color:var(--text)">${c.name}</td>
+      <td style="color:var(--amber)">${c.cost}</td>
+      <td style="color:var(--muted)">${c.diff}</td>
+      <td style="color:var(--muted)">${c.time}</td>
+      <td>${c.job}</td>
+      <td>${c.cloud}</td>
+      <td class="${c.vtype==="do"?"verdict-do":c.vtype==="skip"?"verdict-skip":"verdict-later"}">${c.verdict}</td>
+      <td><a href="${c.url}" target="_blank" rel="noopener" class="res-link" style="font-size:11px">Official Site</a></td>
+    </tr>
+    <tr style="border-bottom:1px solid var(--border)">
+      <td colspan="8" style="color:var(--muted);font-size:11px;padding:6px 16px 12px;font-style:italic">💡 ${c.reason}</td>
+    </tr>
+  `).join("");
+}
+
+function renderCareer(){
+  document.getElementById("career-grid").innerHTML=CAREER_ROLES.map(r=>`
+    <div class="career-card">
+      <div class="career-card-icon">${r.icon}</div>
+      <div class="career-card-title">${r.title}</div>
+      <div class="career-card-sal">${r.sal}</div>
+      <div class="career-card-body" style="margin-top:8px"><strong style="color:var(--text);font-size:11px;letter-spacing:.5px">KEY SKILLS:</strong><br>${r.skills}</div>
+      <div class="career-card-body" style="margin-top:6px;color:var(--green)">${r.helps}</div>
+      <a href="${r.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:12px;font-size:11px;color:var(--blue);text-decoration:none;border:1px solid rgba(56,189,248,.3);padding:4px 12px;border-radius:6px">View Jobs ↗</a>
+    </div>
+  `).join("");
+}
+
+// ═══════════════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════════════
+function markDay(day, val){
+  if(progress[day]===val) delete progress[day];
+  else progress[day]=val;
+  save();
+  renderDays();
+  renderPhases();
+  updateStats();
+  updateCharts();
+}
+
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderDays();
+}
+
+function setPage(p){
+  currentPage=p;
+  renderDays();
+  renderPageBtns();
+}
+
+// ═══════════════════════════════════════════════
+// CHARTS INIT
+// ═══════════════════════════════════════════════
+const chartDefaults={
+  color:"#64748b",
+  plugins:{legend:{labels:{color:"#64748b",font:{family:"JetBrains Mono",size:11}}}},
+};
+Chart.defaults.color="#64748b";
+Chart.defaults.font.family="JetBrains Mono";
+
+function initCharts(){
+  // PIE
+  charts.pie=new Chart(document.getElementById("pieChart"),{
+    type:"doughnut",
+    data:{
+      labels:["Completed ✅","Missed ❌","Remaining"],
+      datasets:[{data:[0,0,100],backgroundColor:["#34d399","#f87171","#1e3d66"],borderWidth:0,hoverOffset:6}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:"65%",
+      plugins:{legend:{position:"bottom",labels:{padding:12,usePointStyle:true,pointStyle:"circle"}},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed} days`}}}
+    }
+  });
+
+  // BAR
+  charts.bar=new Chart(document.getElementById("barChart"),{
+    type:"bar",
+    data:{
+      labels:Array.from({length:14},(_,i)=>"W"+(i+1)),
+      datasets:[
+        {label:"Done",data:Array(14).fill(0),backgroundColor:"#34d39977",borderColor:"#34d399",borderWidth:1,borderRadius:4},
+        {label:"Missed",data:Array(14).fill(0),backgroundColor:"#f8717177",borderColor:"#f87171",borderWidth:1,borderRadius:4}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{grid:{color:"#1e3d6644"},ticks:{color:"#64748b"}},
+        y:{grid:{color:"#1e3d6644"},ticks:{color:"#64748b",stepSize:1},beginAtZero:true}
+      },
+      plugins:{legend:{labels:{color:"#94a3b8",padding:16}}}
+    }
+  });
+
+  // LINE
+  const labels=Array.from({length:100},(_,i)=>i+1);
+  charts.line=new Chart(document.getElementById("lineChart"),{
+    type:"line",
+    data:{
+      labels,
+      datasets:[
+        {label:"Your Progress",data:Array(100).fill(0),borderColor:"#38bdf8",backgroundColor:"rgba(56,189,248,.08)",fill:true,tension:.3,pointRadius:0,borderWidth:2},
+        {label:"Ideal (1/day)",data:labels,borderColor:"#334155",borderDash:[6,4],fill:false,tension:0,pointRadius:0,borderWidth:1.5}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{grid:{color:"#1e3d6644"},ticks:{color:"#64748b",maxTicksLimit:10}},
+        y:{grid:{color:"#1e3d6644"},ticks:{color:"#64748b"},beginAtZero:true,max:100}
+      },
+      plugins:{legend:{labels:{color:"#94a3b8",padding:16}}}
+    }
+  });
+
+  // RADAR
+  charts.radar=new Chart(document.getElementById("radarChart"),{
+    type:"radar",
+    data:{
+      labels:PHASES.map(p=>p.name+" ("+p.days[0]+"-"+p.days[1]+")"),
+      datasets:[{
+        label:"Completion %",
+        data:[0,0,0,0],
+        backgroundColor:"rgba(56,189,248,.15)",
+        borderColor:"#38bdf8",
+        pointBackgroundColor:"#38bdf8",
+        borderWidth:2
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{r:{grid:{color:"#1e3d6644"},ticks:{color:"#64748b",stepSize:25,backdropColor:"transparent"},pointLabels:{color:"#94a3b8",font:{size:10}},min:0,max:100}},
+      plugins:{legend:{labels:{color:"#94a3b8"}}}
+    }
+  });
+
+  // HEATMAP (thin bar per day)
+  charts.heat=new Chart(document.getElementById("heatChart"),{
+    type:"bar",
+    data:{
+      labels:Array.from({length:100},(_,i)=>i+1),
+      datasets:[{
+        data:Array(100).fill(1),
+        backgroundColor:Array(100).fill("#1e3d66"),
+        borderWidth:0,
+        borderRadius:2,
+        barPercentage:0.9,
+        categoryPercentage:0.95
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{grid:{display:false},ticks:{color:"#64748b",maxTicksLimit:10,font:{size:9}}},
+        y:{display:false,beginAtZero:true,max:1.2}
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>"Day "+ctx[0].label,label:ctx=>{const d=ctx.label;if(progress[d]==="yes")return"✅ Done";if(progress[d]==="no")return"❌ Missed";return"⏳ Pending";}}}}
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+let toastTimer=null;
+function showToast(msg,icon="✅",color="#34d399"){
+  const t=document.getElementById("toast");
+  document.getElementById("toast-msg").textContent=msg;
+  document.getElementById("toast-icon").textContent=icon;
+  t.style.borderColor=color+"55";
+  t.style.transform="translateY(0)";
+  t.style.opacity="1";
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.style.transform="translateY(80px)";t.style.opacity="0";},3200);
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════
+function exportData(){
+  const {done,missed,streak}=calcStats();
+  const payload={
+    version:2,
+    exported:new Date().toISOString(),
+    summary:{done,missed,streak,pct:done},
+    progress
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const date=new Date().toISOString().slice(0,10);
+  a.href=url;
+  a.download=`cloudsec_progress_${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Progress exported! (${done} days done)`, "⬇️", "#34d399");
+}
+
+function importData(e){
+  const file=e.target.files[0];
+  if(!file){return;}
+  const reader=new FileReader();
+  reader.onload=evt=>{
+    try{
+      const parsed=JSON.parse(evt.target.result);
+      // support both raw progress object and wrapped payload
+      const data=parsed.progress||parsed;
+      // validate — should have numeric keys 1-100
+      const keys=Object.keys(data);
+      const valid=keys.every(k=>!isNaN(k)&&Number(k)>=1&&Number(k)<=100&&(data[k]==="yes"||data[k]==="no"));
+      if(!valid&&keys.length>0){
+        showToast("Invalid file format. Use an exported file.","⚠️","#fbbf24");
+        return;
+      }
+      progress=data;
+      save();
+      renderDays();
+      renderPhases();
+      updateStats();
+      updateCharts();
+      const done=Object.values(progress).filter(v=>v==="yes").length;
+      showToast(`Imported! ${done} days restored ✨`,"⬆️","#38bdf8");
+    }catch(err){
+      showToast("Could not read file. Is it a valid JSON?","❌","#f87171");
+    }
+    // reset file input so same file can be re-imported
+    e.target.value="";
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════
+// MOBILE — HAMBURGER / DRAWER / TABS / COLLAPSE
+// ═══════════════════════════════════════════════
+function toggleDrawer(){
+  const d=document.getElementById("mobile-drawer");
+  const h=document.getElementById("hamburger");
+  const open=d.classList.toggle("open");
+  h.classList.toggle("open",open);
+}
+
+function drawerNav(el,hash){
+  // close drawer
+  document.getElementById("mobile-drawer").classList.remove("open");
+  document.getElementById("hamburger").classList.remove("open");
+  // update active
+  document.querySelectorAll('.mobile-drawer .nav-link').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  // open the target section on mobile
+  const bodyId = hash.replace('#','') + '-body';
+  const body = document.getElementById(bodyId);
+  if(body && body.classList.contains('collapsed')){
+    toggleSection(bodyId);
+  }
+  // scroll after short delay
+  setTimeout(()=>{ const t=document.querySelector(hash); if(t) t.scrollIntoView({behavior:'smooth'}); },100);
+}
+
+function tabNav(el,hash){
+  document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  // open section if collapsed
+  const bodyId = hash.replace('#','') + '-body';
+  const body = document.getElementById(bodyId);
+  if(body && body.classList.contains('collapsed')) toggleSection(bodyId);
+  const t=document.querySelector(hash);
+  if(t) t.scrollIntoView({behavior:'smooth'});
+}
+
+function toggleSection(bodyId){
+  const body=document.getElementById(bodyId);
+  const toggle=document.getElementById('toggle-'+bodyId);
+  if(!body) return;
+  const isMobile=window.innerWidth<=600;
+  if(!isMobile){ body.classList.remove('collapsed'); if(toggle) toggle.textContent='▾'; return; }
+  const collapsed=body.classList.toggle('collapsed');
+  if(toggle) toggle.textContent = collapsed ? '▸' : '▾';
+}
+
+// Close drawer when clicking outside
+document.addEventListener('click',e=>{
+  const drawer=document.getElementById('mobile-drawer');
+  const hamburger=document.getElementById('hamburger');
+  if(drawer.classList.contains('open') && !drawer.contains(e.target) && !hamburger.contains(e.target)){
+    drawer.classList.remove('open');
+    hamburger.classList.remove('open');
+  }
+});
+
+// On resize — if desktop, ensure all sections are open
+window.addEventListener('resize',()=>{
+  if(window.innerWidth>600){
+    document.querySelectorAll('.section-body').forEach(b=>{
+      b.classList.remove('collapsed');
+    });
+    document.querySelectorAll('.section-toggle').forEach(t=>t.textContent='▾');
+  }
+});
+
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
+window.addEventListener("DOMContentLoaded",()=>{
+  initCharts();
+  renderResources();
+  renderCerts();
+  renderCareer();
+  renderPhases();
+  renderDays();
+  renderPageBtns();
+  updateStats();
+  updateCharts();
+  // random quote on load
+  document.getElementById("motivational-quote").textContent='"'+QUOTES[Math.floor(Date.now()/86400000)%QUOTES.length]+'"';
+});
+</script>
+</body>
+</html>
