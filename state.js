@@ -20,13 +20,35 @@ const DEFAULT_STATE = {
   // Gamification
   xp: 0,
   lastMilestone: 0,
+  bestStreak: 0,
+  lastPhaseUnlocked: 0,
+
+  // Tags & custom topics
+  revisionTags: {},   // {day: true}
+  customTopics: {},   // {day: "custom text"}
+
+  // Week summaries (auto-generated)
+  weekSummaries: {},  // {weekNum: {done, missed, minutes, xp, generatedAt}}
+
+  // Exam dates
+  ccpExamDate: null,
+  secExamDate: null,
+
+  // Streak shield
+  maxFreezes: 5,
+
+  // Sound
+  soundEnabled: true,
 
   // Reminder
-  reminderTime: null,  // "HH:MM" or null
+  reminderTime: null,
   reminderEnabled: false,
 
+  // Late freeze suggestion (track last shown)
+  lastFreezePrompt: null,
+
   // Meta
-  version: 4,
+  version: 5,
   createdAt: null,
 };
 
@@ -78,6 +100,21 @@ function calcStats() {
     else break;
   }
 
+  // Best streak ever
+  let runStreak = 0, bestStreak = state.bestStreak || 0;
+  for (let d = 1; d <= 100; d++) {
+    if (state.progress[d] === "yes" || state.progress[d] === "freeze") {
+      runStreak++;
+      if (runStreak > bestStreak) bestStreak = runStreak;
+    } else if (state.progress[d] === "no") {
+      runStreak = 0;
+    }
+  }
+  if (bestStreak > (state.bestStreak || 0)) { state.bestStreak = bestStreak; }
+
+  // Freeze count used
+  const freezesUsed = frozen;
+
   // Best week
   let bestWeek = 0, worstWeek = 7;
   let bestWeekNum = 1, worstWeekNum = 1;
@@ -111,7 +148,8 @@ function calcStats() {
     }
   }
 
-  return { done, missed, frozen, marked, streak, bestWeek, bestWeekNum,
+  return { done, missed, frozen, marked, streak, bestStreak, freezesUsed,
+           bestWeek, bestWeekNum,
            worstWeek: worstWeek === 7 ? 0 : worstWeek, worstWeekNum,
            totalMinutes, forecast, pct: done };
 }
@@ -237,6 +275,175 @@ function decodeStateFromUrl() {
   if (s) state.startDate = s;
   saveState();
   return true;
+}
+
+// ── WEEK SUMMARY GENERATOR ──
+function generateWeekSummary(weekNum) {
+  const s = (weekNum-1)*7+1, e = Math.min(s+6, 100);
+  const days = Array.from({length: e-s+1}, (_,i) => s+i);
+  const done    = days.filter(d => state.progress[d] === "yes").length;
+  const missed  = days.filter(d => state.progress[d] === "no").length;
+  const frozen  = days.filter(d => state.progress[d] === "freeze").length;
+  const minutes = days.reduce((a,d) => a + (state.studyTime[d]||0), 0);
+  const xpEarned = days.filter(d => state.progress[d]==="yes")
+                       .reduce((a,d) => a + getXpForDay(d, state.studyTime[d]||0), 0);
+  const topics  = days.filter(d => state.progress[d]==="yes").map(d => TOPICS[d]).filter(Boolean);
+  const phase   = PHASES.find(p => s >= p.days[0] && s <= p.days[1]) || PHASES[0];
+  const hrs     = Math.floor(minutes/60), mins = minutes%60;
+  const timeStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+  const emoji   = done >= 6 ? "🔥" : done >= 4 ? "💪" : done >= 2 ? "📈" : "😤";
+  return { weekNum, done, missed, frozen, minutes, timeStr, xpEarned, topics, phase, emoji,
+           total: days.length, generatedAt: Date.now() };
+}
+
+function shouldShowWeeklySummary() {
+  const { done } = calcStats();
+  if (!done) return null;
+  // Check each completed week
+  for (let w = 1; w <= 14; w++) {
+    const e = Math.min(w*7, 100);
+    const days = Array.from({length:7}, (_,i) => (w-1)*7+1+i).filter(d=>d<=100);
+    const allMarked = days.every(d => state.progress[d]);
+    if (allMarked && !state.weekSummaries?.[w]) return w;
+  }
+  return null;
+}
+
+// ── PHASE UNLOCK DETECTOR ──
+function getCurrentPhase() {
+  const { done } = calcStats();
+  for (let i = PHASES.length-1; i >= 0; i--) {
+    if (done >= PHASES[i].days[0]-1) return { phase: PHASES[i], index: i };
+  }
+  return { phase: PHASES[0], index: 0 };
+}
+
+function checkPhaseUnlock() {
+  const { done } = calcStats();
+  for (let i = 1; i < PHASES.length; i++) {
+    const threshold = PHASES[i].days[0] - 1;
+    if (done >= threshold && (state.lastPhaseUnlocked || 0) < i) {
+      state.lastPhaseUnlocked = i;
+      saveState();
+      return { phase: PHASES[i], index: i };
+    }
+  }
+  return null;
+}
+
+// ── EXAM COUNTDOWN ──
+function getExamCountdowns() {
+  const result = { ccp: null, sec: null };
+  const now = new Date(); now.setHours(0,0,0,0);
+
+  if (state.ccpExamDate) {
+    const d = new Date(state.ccpExamDate); d.setHours(0,0,0,0);
+    const diff = Math.ceil((d - now) / (1000*60*60*24));
+    result.ccp = { date: d, days: diff, passed: diff < 0 };
+  }
+  if (state.secExamDate) {
+    const d = new Date(state.secExamDate); d.setHours(0,0,0,0);
+    const diff = Math.ceil((d - now) / (1000*60*60*24));
+    result.sec = { date: d, days: diff, passed: diff < 0 };
+  }
+  // Fallback from start date
+  if (!result.ccp && state.startDate) {
+    const s = new Date(state.startDate);
+    const ccp = new Date(s); ccp.setDate(ccp.getDate()+62); ccp.setHours(0,0,0,0);
+    const diff = Math.ceil((ccp - now) / (1000*60*60*24));
+    result.ccpEstimate = { date: ccp, days: diff, passed: diff < 0 };
+  }
+  if (!result.sec && state.startDate) {
+    const s = new Date(state.startDate);
+    const sec = new Date(s); sec.setDate(sec.getDate()+99); sec.setHours(0,0,0,0);
+    const diff = Math.ceil((sec - now) / (1000*60*60*24));
+    result.secEstimate = { date: sec, days: diff, passed: diff < 0 };
+  }
+  return result;
+}
+
+// ── LINKEDIN POST GENERATOR ──
+function generateLinkedInPost() {
+  const { done, streak, totalMinutes } = calcStats();
+  const rank = getRank(state.xp);
+  const phase = getCurrentPhase().phase;
+  const hrs = Math.floor(totalMinutes/60);
+  const templates = [
+    `🚀 Day ${done} of my 100-day Cloud Security journey — just completed!\n\n` +
+    `Currently in ${phase.name}: ${phase.label}\n` +
+    `🔥 ${streak}-day streak | ⏱ ${hrs}+ hours studied | 🏅 Rank: ${rank.name}\n\n` +
+    `Working toward: AWS Cloud Practitioner → CompTIA Security+\n\n` +
+    `The grind is real but so is the progress. If you're on a similar journey, let's connect!\n\n` +
+    `#CloudSecurity #AWS #CompTIA #SecurityPlus #100DaysOfCloud #Cybersecurity #LearningInPublic`,
+
+    `📊 ${done}/100 days done on my Cloud Security roadmap.\n\n` +
+    `What I've covered so far:\n` +
+    `${phase.name}: ${phase.label}\n\n` +
+    `Key tools I've been working with: AWS, IAM, VPC, CloudTrail, GuardDuty, CloudGoat\n\n` +
+    `Target certs: AWS CCP + CompTIA Security+\n` +
+    `Current streak: ${streak} days 🔥\n\n` +
+    `Building in public. Sharing everything I learn.\n\n` +
+    `#AWS #CloudSecurity #Cybersecurity #SecurityPlus #LearningInPublic`,
+
+    `💡 ${done} days into my 100-day Cloud Security challenge.\n\n` +
+    `Today's focus: ${TOPICS[done] || phase.label}\n\n` +
+    `This roadmap has completely changed how I think about cloud infrastructure security.\n\n` +
+    `Rank achieved: ${rank.icon} ${rank.name}\n\n` +
+    `Anyone else doing a structured cybersecurity learning sprint? Drop a comment 👇\n\n` +
+    `#CloudSecurity #AWS #100DayChallenge #Cybersecurity #TechCareer`,
+  ];
+  return templates[done % templates.length];
+}
+
+// ── NOTES EXPORT (Markdown journal) ──
+function exportNotesAsMarkdown() {
+  const { done } = calcStats();
+  let md = `# ☁️ CloudSec Study Journal\n\n`;
+  md += `**Generated:** ${new Date().toLocaleDateString("en-IN")}\n`;
+  md += `**Progress:** ${done}/100 days\n\n---\n\n`;
+
+  for (let d = 1; d <= 100; d++) {
+    const note    = state.notes[d];
+    const status  = state.progress[d];
+    const mins    = state.studyTime[d];
+    const topic   = TOPICS[d];
+    const phase   = getPhaseForDay(d);
+    const isRevision = state.revisionTags?.[d];
+
+    if (!note && !status) continue;
+
+    const statusIcon = status === "yes" ? "✅" : status === "no" ? "❌" : status === "freeze" ? "❄️" : "⏳";
+    md += `## ${statusIcon} Day ${d} — ${topic}\n`;
+    md += `*${phase.name} · ${phase.label}*`;
+    if (mins) md += ` · ⏱ ${mins} min`;
+    if (isRevision) md += ` · 🔖 NEEDS REVISION`;
+    md += `\n\n`;
+    if (note) md += `${note}\n\n`;
+    md += `---\n\n`;
+  }
+  return md;
+}
+
+function getPhaseForDay(day) {
+  return PHASES.find(p => day >= p.days[0] && day <= p.days[1]) || PHASES[0];
+}
+
+// ── LATE FREEZE SUGGESTION ──
+function shouldSuggestFreeze() {
+  if (!state.startDate) return false;
+  const now = new Date();
+  const hour = now.getHours();
+  if (hour < 21) return false; // Only after 9pm
+
+  const calDay = getCalendarDay();
+  if (!calDay) return false;
+
+  const todayKey = now.toISOString().slice(0,10);
+  if (state.lastFreezePrompt === todayKey) return false;
+
+  // Today's calendar day not marked yet
+  if (!state.progress[calDay]) return calDay;
+  return false;
 }
 
 // ── KEYBOARD SHORTCUTS ──

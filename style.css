@@ -832,3 +832,50 @@ footer {
   .forecast-card { flex-direction:column; align-items:flex-start }
 }
 @media(max-width:380px) { .days-grid { grid-template-columns:1fr } }
+
+/* ═══════════════════════════════════════
+   v5 NEW FEATURES
+═══════════════════════════════════════ */
+
+/* COUNTDOWN PILLS */
+.countdown-pill { display:inline-flex; align-items:center; gap:8px; padding:7px 13px; border:1px solid var(--border); border-radius:99px; font-size:10px; font-family:var(--font-mono); }
+.cd-label  { color:var(--text2); }
+.cd-date   { color:var(--muted); }
+.cd-days   { font-weight:700; font-size:12px; }
+
+/* REVISION BADGE ON DAY CARD */
+.rev-badge { position:absolute; top:8px; left:8px; font-size:10px; background:rgba(251,191,36,.15); border:1px solid rgba(251,191,36,.3); border-radius:4px; padding:2px 5px; color:#fbbf24; }
+.revision-c { border-color:rgba(251,191,36,.35) !important; }
+.heatmap-cell.revision { outline:2px solid rgba(251,191,36,.6); outline-offset:-2px; }
+
+/* CUSTOM TOPIC EDITING */
+.day-topic-wrap { position:relative; }
+.day-topic { cursor:pointer; transition:background .15s; border-radius:4px; padding:2px 3px; margin:-2px -3px; }
+.day-topic:hover { background:rgba(255,255,255,.05); }
+.day-topic-input { width:100%; background:var(--bg4); border:1px solid var(--ac); color:var(--text); font-family:var(--font-mono); font-size:9.5px; padding:3px 6px; border-radius:4px; outline:none; margin-top:2px; }
+
+/* PHASE UNLOCK MODAL */
+#phase-unlock-modal .modal { animation:pop-in .35s cubic-bezier(.34,1.56,.64,1); }
+@keyframes pop-in { from{transform:scale(.7);opacity:0} to{transform:scale(1);opacity:1} }
+
+/* WEEK SUMMARY MODAL */
+#week-summary-modal .modal { max-width:420px; }
+
+/* LINKEDIN TEXTAREA */
+#linkedin-post-text:focus { border-color:var(--ac) !important; }
+
+/* SOUND BUTTON */
+#btn-sound { font-size:14px; opacity:.8; }
+#btn-sound:hover { opacity:1; }
+
+/* REVISION FILTER */
+.filter-btn { white-space:nowrap; }
+
+/* STATS GRID 3-COL */
+.stats-grid { grid-template-columns:repeat(3,1fr); }
+
+/* WEEK SUMMARY BAR */
+#ws-bar { transition:width .8s cubic-bezier(.34,1.56,.64,1); }
+
+/* EXAM DATE INPUTS */
+#ccp-exam-date:focus, #sec-exam-date:focus { border-color:var(--ac); }

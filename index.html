@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>☁️ CloudSec — 100-Day Tracker</title>
 <link rel="stylesheet" href="style.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+<!-- Chart.js loaded at bottom of body, not here -->
 </head>
 <body>
 
@@ -84,6 +84,55 @@
   </div>
 </div>
 
+<!-- ══ PHASE UNLOCK MODAL ══ -->
+<div class="modal-overlay" id="phase-unlock-modal">
+  <div class="modal" style="position:relative;text-align:center">
+    <button class="modal-close" onclick="document.getElementById('phase-unlock-modal').classList.remove('show')">✕</button>
+    <div style="font-size:52px;margin-bottom:10px">🔓</div>
+    <div style="font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Phase Unlocked!</div>
+    <div class="boss-title" id="pu-name" style="font-size:28px">Phase 2</div>
+    <div style="font-size:14px;color:var(--text2);margin:6px 0 4px" id="pu-label">Cloud Security Deep Dive</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:20px" id="pu-range">Days 31–60</div>
+    <button class="pomo-btn primary" onclick="document.getElementById('phase-unlock-modal').classList.remove('show')">Let's Go! 🚀</button>
+  </div>
+</div>
+
+<!-- ══ WEEK SUMMARY MODAL ══ -->
+<div class="modal-overlay" id="week-summary-modal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="document.getElementById('week-summary-modal').classList.remove('show')">✕</button>
+    <div style="text-align:center;font-size:40px;margin-bottom:6px" id="ws-emoji">🔥</div>
+    <div class="modal-title" id="ws-title" style="text-align:center">Week 1 Summary</div>
+    <div class="modal-sub" id="ws-phase" style="text-align:center">Cloud Fundamentals</div>
+    <div style="margin:16px 0">
+      <div style="height:5px;background:var(--bg4);border-radius:99px;overflow:hidden;margin-bottom:14px"><div id="ws-bar" style="height:100%;background:linear-gradient(90deg,#34d399,#60a5fa);border-radius:99px;transition:width .8s;width:0%"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+        <div style="background:var(--bg3);border-radius:10px;padding:12px"><div style="font-family:var(--font-head);font-size:22px;font-weight:900;color:#34d399" id="ws-done">0/7</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px">Days Done</div></div>
+        <div style="background:var(--bg3);border-radius:10px;padding:12px"><div style="font-family:var(--font-head);font-size:22px;font-weight:900;color:#fbbf24" id="ws-time">—</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px">Study Time</div></div>
+        <div style="background:var(--bg3);border-radius:10px;padding:12px"><div style="font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--ac)" id="ws-xp">+0 XP</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px">XP Earned</div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="pomo-btn primary" onclick="document.getElementById('week-summary-modal').classList.remove('show')">Onward! 💪</button>
+      <button class="pomo-btn" onclick="App.openLinkedIn();document.getElementById('week-summary-modal').classList.remove('show')">Share on LinkedIn 💼</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LINKEDIN MODAL ══ -->
+<div class="modal-overlay" id="linkedin-modal">
+  <div class="modal" style="position:relative;max-width:500px">
+    <button class="modal-close" onclick="document.getElementById('linkedin-modal').classList.remove('show')">✕</button>
+    <div class="modal-title">💼 LinkedIn Post Generator</div>
+    <div class="modal-sub">Auto-generated post based on your current progress. Edit freely before copying.</div>
+    <textarea id="linkedin-post-text" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:10.5px;padding:12px;border-radius:10px;resize:vertical;height:200px;line-height:1.7;outline:none;margin-bottom:12px"></textarea>
+    <div style="display:flex;gap:8px">
+      <button class="pomo-btn primary" onclick="App.copyLinkedIn()">📋 Copy Post</button>
+      <button class="pomo-btn" onclick="window.open('https://www.linkedin.com/feed/','_blank')">Open LinkedIn ↗</button>
+      <button class="pomo-btn" onclick="document.getElementById('linkedin-modal').classList.remove('show')">Close</button>
+    </div>
+  </div>
+</div>
 <!-- ══ NAV ══ -->
 <nav>
   <div class="nav-logo">
@@ -126,11 +175,14 @@
     </div>
 
     <!-- Actions -->
+    <button class="btn btn-ghost" id="btn-sound" onclick="toggleSound()" title="Toggle Sound">🔊</button>
     <button class="btn btn-ghost" onclick="openPomodoro()" title="Pomodoro Timer">⏱</button>
+    <button class="btn btn-ghost" onclick="App.openLinkedIn()" title="LinkedIn Post Generator">💼</button>
     <button class="btn btn-ghost" onclick="App.shareUrl()"  title="Share Progress">🔗</button>
     <button class="btn btn-ghost" onclick="App.exportData()" title="Export JSON">⬇</button>
     <label  class="btn btn-ghost" style="cursor:pointer" title="Import JSON">⬆<input type="file" accept=".json" onchange="App.importData(event)" style="display:none"/></label>
     <button class="btn btn-ghost" onclick="App.exportPdf()" title="Export PDF Report">📄</button>
+    <button class="btn btn-ghost" onclick="App.exportNotesMarkdown()" title="Export Notes as Markdown Journal">📓</button>
     <button class="btn btn-ghost" onclick="document.getElementById('kbd-overlay').classList.add('show')" title="Keyboard shortcuts">?</button>
     <button class="hamburger" id="hamburger" onclick="toggleDrawer()">
       <span></span><span></span><span></span>
@@ -251,6 +303,11 @@
       <div class="stat-val" id="stat-time" style="color:#fbbf24;font-size:22px">—</div>
       <div class="stat-lbl">Total Study Time</div>
     </div>
+    <div class="stat-card s-ac">
+      <span class="stat-icon">🏆</span>
+      <div class="stat-val" id="stat-best-streak" style="color:var(--ac)">0</div>
+      <div class="stat-lbl">Best Streak Ever</div>
+    </div>
   </div>
 
   <!-- JOURNEY BAR -->
@@ -300,7 +357,46 @@
       </label>
     </div>
   </div>
-</div>
+
+  <!-- EXAM COUNTDOWN -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-top:14px">
+    <div style="font-size:9.5px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">⏳ Exam Countdown</div>
+    <div id="exam-countdown-wrap" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+    <div style="font-size:9.5px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Set Your Actual Exam Dates</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <label style="font-size:10px;color:var(--text2)">🎯 AWS CCP</label>
+      <input type="date" id="ccp-exam-date" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:5px 10px;border-radius:var(--radius-sm);outline:none;cursor:pointer"/>
+      <label style="font-size:10px;color:var(--text2)">🏆 Security+</label>
+      <input type="date" id="sec-exam-date" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:11px;padding:5px 10px;border-radius:var(--radius-sm);outline:none;cursor:pointer"/>
+      <button class="btn btn-ac" onclick="saveExamDates()">Save Dates</button>
+    </div>
+  </div>
+
+  <!-- STREAK SHIELD -->
+  <div style="background:var(--bg2);border:1px solid rgba(96,165,250,.2);border-radius:var(--radius);padding:12px 18px;margin-top:10px;font-size:11px" id="streak-shield">
+    ❄️ Streak Shield: <strong style="color:#60a5fa">5/5</strong> freezes remaining
+  </div>
+
+  <!-- DANGER ZONE -->
+  <div id="danger-zone" style="display:none;background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.3);border-radius:var(--radius);padding:14px 18px;margin-top:10px;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-size:20px">⚠️</span>
+    <div style="flex:1">
+      <div style="font-size:11px;font-weight:700;color:#f87171;margin-bottom:2px">Danger Zone — You're falling behind!</div>
+      <div style="font-size:10px;color:var(--text2)">More than 5 days behind schedule. Catch up now to stay on track for your exam.</div>
+    </div>
+    <button class="btn btn-ghost" onclick="jumpToDay(getNextDay())" style="border-color:rgba(248,113,113,.4);color:#f87171">Catch Up Now →</button>
+  </div>
+
+  <!-- LATE FREEZE PROMPT -->
+  <div id="freeze-prompt" style="display:none;background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.3);border-radius:var(--radius);padding:14px 18px;margin-top:10px;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-size:20px">❄️</span>
+    <div style="flex:1">
+      <div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:2px">Running late today?</div>
+      <div style="font-size:10px;color:var(--text2)">Day <strong id="fp-day">1</strong> isn't marked yet. Freeze it to protect your streak instead of breaking it.</div>
+    </div>
+    <button class="btn btn-ac" onclick="App.freezeFromPrompt()">❄️ Freeze Today</button>
+    <button class="btn btn-ghost" onclick="App.dismissFreezePrompt()">Dismiss</button>
+  </div>
 
 <!-- ══════════════════════════════
      CHARTS
@@ -398,6 +494,7 @@
         <button class="filter-btn" onclick="App.setFilter('missed',this)">❌ Missed</button>
         <button class="filter-btn" onclick="App.setFilter('pending',this)">⏳ Pending</button>
         <button class="filter-btn" onclick="App.setFilter('frozen',this)">❄️ Frozen</button>
+        <button class="filter-btn" onclick="App.setFilter('revision',this)">🔖 Revision</button>
       </div>
       <div class="page-group" id="page-btns"></div>
     </div>
@@ -496,17 +593,14 @@
 <script src="state.js"></script>
 <script src="app.js"></script>
 <script>
-// ══ BOOT ══
 window.addEventListener("DOMContentLoaded", () => {
   loadState();
 
-  // Try decode from URL first (share link)
   if (window.location.search.includes("p=")) {
     decodeStateFromUrl();
     showToast("Loaded shared progress!", "🔗", "#a78bfa");
   }
 
-  // Apply saved preferences
   document.documentElement.setAttribute("data-theme",   state.theme   || "dark");
   document.documentElement.setAttribute("data-accent",  state.accent  || "blue");
   document.documentElement.setAttribute("data-density", state.density || "comfortable");
@@ -515,12 +609,17 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-light").classList.toggle("active",       state.theme === "light");
   document.getElementById("btn-comfortable").classList.toggle("active", state.density !== "compact");
   document.getElementById("btn-compact").classList.toggle("active",     state.density === "compact");
+  document.getElementById("btn-sound").textContent = (state.soundEnabled === false) ? "🔇" : "🔊";
   document.querySelectorAll(".accent-dot").forEach(d =>
     d.classList.toggle("active", d.dataset.a === (state.accent || "blue")));
 
-  if (state.startDate) document.getElementById("start-date").value = state.startDate;
-  if (state.reminderTime) document.getElementById("reminder-time").value = state.reminderTime;
+  if (state.startDate)      document.getElementById("start-date").value     = state.startDate;
+  if (state.reminderTime)   document.getElementById("reminder-time").value  = state.reminderTime;
   if (state.reminderEnabled) document.getElementById("reminder-toggle").checked = true;
+  if (state.ccpExamDate && document.getElementById("ccp-exam-date"))
+    document.getElementById("ccp-exam-date").value = state.ccpExamDate;
+  if (state.secExamDate && document.getElementById("sec-exam-date"))
+    document.getElementById("sec-exam-date").value = state.secExamDate;
 
   initCharts();
   renderResources();
@@ -532,10 +631,6 @@ window.addEventListener("DOMContentLoaded", () => {
   initKeyboardShortcuts();
   initScrollSpy();
   startReminderLoop();
-
-  // Stats grid — make it 3+3 if too many for 4-col on desktop
-  const statsGrid = document.querySelector(".stats-grid");
-  if (statsGrid) statsGrid.style.gridTemplateColumns = "repeat(3,1fr)";
 });
 </script>
 </body>
