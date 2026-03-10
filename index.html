@@ -1016,7 +1016,8 @@ function phaseStats(){
   });
 }
 
-function getTodayDay(){
+function getCalendarDay(){
+  // The day number you SHOULD be on based on start date
   if(!state.startDate) return null;
   const start = new Date(state.startDate);
   const now = new Date();
@@ -1024,6 +1025,25 @@ function getTodayDay(){
   const diff = Math.floor((now-start)/(1000*60*60*24))+1;
   if(diff>=1 && diff<=100) return diff;
   return null;
+}
+
+function getNextDay(){
+  // The next day you haven't marked yet — regardless of calendar.
+  // If you're ahead: returns the first pending day after your last mark.
+  // If you're on track or behind: same as calendar day (first pending day).
+  for(let d=1;d<=100;d++){
+    if(!state.progress[d]) return d;
+  }
+  return null; // all 100 done
+}
+
+function getScheduleStatus(){
+  // Returns { calDay, nextDay, daysAhead }
+  const calDay = getCalendarDay();
+  const nextDay = getNextDay();
+  if(!calDay || !nextDay) return { calDay, nextDay, daysAhead: 0 };
+  const daysAhead = nextDay - calDay; // negative = ahead, positive = behind
+  return { calDay, nextDay, daysAhead };
 }
 
 function setActive(el){
@@ -1056,14 +1076,22 @@ function updateDeadlines(){
   const fmt = d => d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
   disp.innerHTML=`🎯 AWS CCP target: <strong>${fmt(ccp)}</strong> &nbsp;|&nbsp; 🏆 Security+ target: <strong>${fmt(sec)}</strong>`;
   
-  const today = getTodayDay();
-  if(today){
-    badge.innerHTML=`📅 Today is <strong>Day ${today}</strong> — ${TOPICS[today]||""}`;
-  } else if(new Date(state.startDate)>new Date()){
+  const {calDay, nextDay, daysAhead} = getScheduleStatus();
+
+  if(new Date(state.startDate)>new Date()){
     const daysLeft=Math.ceil((new Date(state.startDate)-new Date())/(1000*60*60*24));
     badge.innerHTML=`📅 Journey starts in <strong>${daysLeft} day${daysLeft===1?'':'s'}</strong>`;
+  } else if(!nextDay){
+    badge.innerHTML=`🏆 <strong>All 100 days complete!</strong> You did it!`;
+  } else if(calDay && daysAhead < 0){
+    const ahead = Math.abs(daysAhead);
+    badge.innerHTML=`⚡ <strong>${ahead} day${ahead===1?'':'s'} ahead of schedule!</strong> Up next: Day ${nextDay} — ${TOPICS[nextDay]||""}`;
+  } else if(calDay && daysAhead > 0){
+    badge.innerHTML=`⏰ <strong>${daysAhead} day${daysAhead===1?'':'s'} behind.</strong> Catch up: Day ${nextDay} — ${TOPICS[nextDay]||""}`;
+  } else if(calDay){
+    badge.innerHTML=`📅 Today is <strong>Day ${nextDay}</strong> — ${TOPICS[nextDay]||""}`;
   } else {
-    badge.innerHTML="📅 Journey complete — well done!";
+    badge.innerHTML=`📍 Up next: <strong>Day ${nextDay}</strong> — ${TOPICS[nextDay]||""}`;
   }
 }
 
@@ -1075,6 +1103,7 @@ function render(){
   updateCharts();
   renderPhases();
   renderDays();
+  updateDeadlines();
   checkMilestones();
 }
 
@@ -1178,7 +1207,7 @@ function renderDays(){
   const start=currentPage*DAYS_PER_PAGE+1;
   const end=Math.min(start+DAYS_PER_PAGE-1,100);
   let days=Array.from({length:end-start+1},(_,i)=>start+i);
-  const todayDay=getTodayDay();
+  const todayDay=getNextDay();
 
   if(currentFilter==="done") days=days.filter(d=>state.progress[d]==="yes");
   else if(currentFilter==="missed") days=days.filter(d=>state.progress[d]==="no");
@@ -1196,7 +1225,7 @@ function renderDays(){
         <span class="day-num">DAY ${day}</span>
         <span class="day-tag" style="background:${phase.color}22;color:${phase.color};border:1px solid ${phase.color}44">${phase.name}</span>
       </div>
-      ${isToday?'<div class="day-today-badge">📍 TODAY</div>':''}
+      ${isToday?'<div class="day-today-badge">📍 UP NEXT</div>':''}
       <div class="day-topic">${TOPICS[day]}</div>
       <textarea class="day-note-area" placeholder="Notes for today..." aria-label="Notes for Day ${day}"
         onchange="saveNote(${day},this.value)"
