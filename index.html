@@ -237,6 +237,15 @@
       <div class="hero-badge">🎯 <strong>Target:</strong> AWS CCP + CompTIA Sec+</div>
       <div class="hero-badge">💾 <strong>Auto-saved</strong> locally · Export/Import anytime</div>
     </div>
+    <div class="next-actions">
+      <div class="next-chip" id="next-day-chip">🎯 Next up: Day 1</div>
+      <div class="next-btns">
+        <button class="btn btn-ghost next-btn done" id="next-done-btn" onclick="App.markNextDay('yes')">✅ Done</button>
+        <button class="btn btn-ghost next-btn missed" id="next-missed-btn" onclick="App.markNextDay('no')">❌ Missed</button>
+        <button class="btn btn-ghost next-btn freeze" id="next-freeze-btn" onclick="App.markNextDay('freeze')">❄️ Freeze</button>
+        <button class="btn btn-ghost next-btn" id="next-focus-btn" onclick="App.focusNextDay()">🎯 Focus</button>
+      </div>
+    </div>
   </div>
 
   <!-- XP RANK BAR -->
@@ -630,6 +639,7 @@ window.addEventListener("DOMContentLoaded", () => {
   initSearch();
   initKeyboardShortcuts();
   initScrollSpy();
+  initAccessibility();
   startReminderLoop();
 });
 </script>
