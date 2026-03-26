@@ -448,9 +448,9 @@ function shouldSuggestFreeze() {
 
 // ── KEYBOARD SHORTCUTS ──
 const SHORTCUTS = {
-  "d": () => { const nd = getNextDay(); if(nd) App.markDay(nd, "yes"); },
-  "m": () => { const nd = getNextDay(); if(nd) App.markDay(nd, "no"); },
-  "f": () => { const nd = getNextDay(); if(nd) App.markDay(nd, "freeze"); },
+  "d": () => App.markNextDay("yes"),
+  "m": () => App.markNextDay("no"),
+  "f": () => App.markNextDay("freeze"),
   "n": () => {
     const nd = getNextDay();
     if (!nd) return;

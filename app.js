@@ -58,7 +58,7 @@ function toggleSound() {
 function render() {
   updateStats(); updateXpBar(); updateCharts(); renderPhases(); renderDays();
   updateDeadlines(); updateExamCountdowns(); checkMilestones(); checkPhaseUnlockAnim();
-  renderHeatmap(); updateForecastCard(); checkWeekSummary(); checkFreezePrompt(); updateStreakShield();
+  renderHeatmap(); updateForecastCard(); checkWeekSummary(); checkFreezePrompt(); updateStreakShield(); updateNextActionBar();
 }
 
 // ═══ COUNT-UP ANIMATION ═══
@@ -109,6 +109,21 @@ function updateStreakShield() {
   const used=Object.values(state.progress).filter(v=>v==="freeze").length;
   const max=state.maxFreezes||5, left=Math.max(0,max-used);
   el.innerHTML=`❄️ Streak Shield: <strong style="color:${left>1?"#60a5fa":"#f87171"}">${left}/${max}</strong> freezes remaining`;
+}
+
+// ═══ QUICK NEXT ACTIONS ═══
+function updateNextActionBar() {
+  const chip=document.getElementById("next-day-chip");
+  if(!chip) return;
+  const nextDay=getNextDay();
+  const ids=["next-done-btn","next-missed-btn","next-freeze-btn","next-focus-btn"];
+  if(!nextDay){
+    chip.textContent="🏆 Completed! All 100 days are marked.";
+    ids.forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true;});
+    return;
+  }
+  chip.textContent=`🎯 Next up: Day ${nextDay} — ${(state.customTopics?.[nextDay]||TOPICS[nextDay]||"").slice(0,70)}`;
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false;});
 }
 
 // ═══ XP BAR ═══
@@ -419,6 +434,16 @@ App.toggleResource=function(name,checked){if(checked)state.resources[name]=true;
 App.toggleRevision=function(day){if(!state.revisionTags)state.revisionTags={};if(state.revisionTags[day]){delete state.revisionTags[day];showToast(`Day ${day} revision cleared`,"✅","#34d399");}else{state.revisionTags[day]=true;showToast(`Day ${day} flagged for revision 🔖`,"🔖","#fbbf24");}saveState();renderDays();renderHeatmap();};
 App.setFilter=function(f,el){currentFilter=f;document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));el.classList.add("active");renderDays();};
 App.setPage=function(p){currentPage=p;renderDays();renderPageBtns();};
+App.focusNextDay=function(){
+  const nd=getNextDay();
+  if(!nd){showToast("All days complete — amazing work! 🏆","🏆","#34d399");return;}
+  jumpToDay(nd);
+};
+App.markNextDay=function(val){
+  const nd=getNextDay();
+  if(!nd){showToast("All days complete — nothing left to mark 🎉","🎉","#34d399");return;}
+  App.markDay(nd,val);
+};
 
 // ═══ SEARCH ═══
 function initSearch(){
@@ -509,6 +534,16 @@ function saveStartDate(){state.startDate=document.getElementById("start-date").v
 
 // ═══ SCROLL SPY ═══
 function initScrollSpy(){const sections=["overview","charts","phases","tracker","resources","certs","career"];const observer=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const id=e.target.id;document.querySelectorAll(".nav-link").forEach(n=>n.classList.toggle("active",n.getAttribute("href")==="#"+id));}});},{threshold:.15,rootMargin:"-60px 0px 0px 0px"});sections.forEach(id=>{const el=document.getElementById(id);if(el)observer.observe(el);});}
+
+// ═══ ACCESSIBILITY ═══
+function initAccessibility(){
+  // Ensure icon-only actions are announced by screen readers.
+  document.querySelectorAll("button[title], label[title]").forEach(el=>{
+    if(!el.getAttribute("aria-label")){
+      el.setAttribute("aria-label",el.getAttribute("title"));
+    }
+  });
+}
 
 // ═══ HELPERS ═══
 function getPhase(day){return PHASES.find(p=>day>=p.days[0]&&day<=p.days[1])||PHASES[0];}
